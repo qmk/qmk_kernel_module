@@ -97,7 +97,7 @@ keyboard-clean:
 
 keyboard-clean-all:
 	echo "* Cleaning all overlays"
-	rm keyboards/*/*.dtbo keyboards/*/*.tmp 2>/dev/null; true
+	rm keyboards/*.dtbo keyboards/*.tmp 2>/dev/null; true
 	echo "  Complete"
 
 keyboard-load: keyboard-default
