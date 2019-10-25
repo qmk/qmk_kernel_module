@@ -1,0 +1,201 @@
+#include "dt-bindings_input.h"
+
+/dts-v1/;
+/plugin/;
+/ {
+	compatible = "brcm,bcm2835", "brcm,bcm2708", "brcm,bcm2709";
+	
+	fragment@0 {
+		target-path = "/";
+		__overlay__ {
+			keypad: planck {
+				compatible = "qmk";
+				debounce-delay-ms = <5>;
+				// drive-inactive-cols;
+				gpio-activelow;
+				col-scan-delay-us = <1>;
+				
+				keypad,num-layers = <3>;
+				keypad,num-rows = <8>;
+				keypad,num-columns = <6>;
+				col-gpios = <&gpio 12 0
+						     &gpio 13 0
+						     &gpio 16 0
+						     &gpio 19 0
+						     &gpio 25 0
+						     &gpio 10 0
+						     &gpio 9  0
+						     &gpio 11 0>;
+				row-gpios = <&gpio 20 0
+						     &gpio 21 0
+						     &gpio 6  0
+						     &gpio 24 0
+						     &gpio 23 0
+						     &gpio 22 0>;
+				qmk,keymap = <
+				    // layer 0
+
+					LAYER_MATRIX_KEY(0, 0, 0, KEY_TAB)
+					LAYER_MATRIX_KEY(0, 1, 0, KEY_Q)
+					LAYER_MATRIX_KEY(0, 2, 0, KEY_W)
+					LAYER_MATRIX_KEY(0, 3, 0, KEY_E)
+					LAYER_MATRIX_KEY(0, 4, 0, KEY_R)
+					LAYER_MATRIX_KEY(0, 5, 0, KEY_T)
+					LAYER_MATRIX_KEY(0, 0, 4, KEY_Y)
+					LAYER_MATRIX_KEY(0, 1, 4, KEY_U)
+					LAYER_MATRIX_KEY(0, 2, 4, KEY_I)
+					LAYER_MATRIX_KEY(0, 3, 4, KEY_O)
+					LAYER_MATRIX_KEY(0, 4, 4, KEY_P)
+					LAYER_MATRIX_KEY(0, 5, 4, KEY_BACKSPACE)
+
+					LAYER_MATRIX_KEY(0, 0, 1, KEY_ESC)
+					LAYER_MATRIX_KEY(0, 1, 1, KEY_A)
+					LAYER_MATRIX_KEY(0, 2, 1, KEY_S)
+					LAYER_MATRIX_KEY(0, 3, 1, KEY_D)
+					LAYER_MATRIX_KEY(0, 4, 1, KEY_F)
+					LAYER_MATRIX_KEY(0, 5, 1, KEY_G)
+					LAYER_MATRIX_KEY(0, 0, 5, KEY_H)
+					LAYER_MATRIX_KEY(0, 1, 5, KEY_J)
+					LAYER_MATRIX_KEY(0, 2, 5, KEY_K)
+					LAYER_MATRIX_KEY(0, 3, 5, KEY_L)
+					LAYER_MATRIX_KEY(0, 4, 5, KEY_SEMICOLON)
+					LAYER_MATRIX_KEY(0, 5, 5, KEY_APOSTROPHE)
+
+					LAYER_MATRIX_KEY(0, 0, 2, KEY_LEFTSHIFT)
+					LAYER_MATRIX_KEY(0, 1, 2, KEY_Z)
+					LAYER_MATRIX_KEY(0, 2, 2, KEY_X)
+					LAYER_MATRIX_KEY(0, 3, 2, KEY_C)
+					LAYER_MATRIX_KEY(0, 4, 2, KEY_V)
+					LAYER_MATRIX_KEY(0, 5, 2, KEY_B)
+					LAYER_MATRIX_KEY(0, 0, 6, KEY_N)
+					LAYER_MATRIX_KEY(0, 1, 6, KEY_M)
+					LAYER_MATRIX_KEY(0, 2, 6, KEY_COMMA)
+					LAYER_MATRIX_KEY(0, 3, 6, KEY_DOT)
+					LAYER_MATRIX_KEY(0, 4, 6, KEY_SLASH)
+					LAYER_MATRIX_KEY(0, 5, 6, KEY_ENTER)
+
+					LAYER_MATRIX_KEY(0, 0, 3, KEY_RIGHTSHIFT)
+					LAYER_MATRIX_KEY(0, 1, 3, KEY_LEFTMETA)
+					LAYER_MATRIX_KEY(0, 2, 3, KEY_LEFTALT)
+					LAYER_MATRIX_KEY(0, 3, 7, KEY_LEFTCTRL)
+					LAYER_MATRIX_KEY(0, 4, 7, KEY_FN)
+					LAYER_MATRIX_KEY(0, 5, 7, KEY_SPACE)
+					LAYER_MATRIX_KEY(0, 0, 7, KEY_SPACE) // space
+					LAYER_MATRIX_KEY(0, 1, 7, KEY_FN)
+					LAYER_MATRIX_KEY(0, 2, 7, KEY_LEFT)
+					LAYER_MATRIX_KEY(0, 3, 3, KEY_DOWN)
+					LAYER_MATRIX_KEY(0, 4, 3, KEY_UP)
+					LAYER_MATRIX_KEY(0, 5, 3, KEY_RIGHT)
+
+					// layer 1
+
+					LAYER_MATRIX_KEY(1, 0, 0, KEY_GRAVE)
+					LAYER_MATRIX_KEY(1, 1, 0, KEY_1)
+					LAYER_MATRIX_KEY(1, 2, 0, KEY_2)
+					LAYER_MATRIX_KEY(1, 3, 0, KEY_3)
+					LAYER_MATRIX_KEY(1, 4, 0, KEY_4)
+					LAYER_MATRIX_KEY(1, 5, 0, KEY_5)
+					LAYER_MATRIX_KEY(1, 0, 4, KEY_6)
+					LAYER_MATRIX_KEY(1, 1, 4, KEY_7)
+					LAYER_MATRIX_KEY(1, 2, 4, KEY_8)
+					LAYER_MATRIX_KEY(1, 3, 4, KEY_9)
+					LAYER_MATRIX_KEY(1, 4, 4, KEY_0)
+					LAYER_MATRIX_KEY(1, 5, 4, KEY_BACKSPACE)
+
+					LAYER_MATRIX_KEY(1, 0, 1, KEY_ESC)
+					LAYER_MATRIX_KEY(1, 1, 1, KEY_A)
+					LAYER_MATRIX_KEY(1, 2, 1, KEY_S)
+					LAYER_MATRIX_KEY(1, 3, 1, KEY_D)
+					LAYER_MATRIX_KEY(1, 4, 1, KEY_F)
+					LAYER_MATRIX_KEY(1, 5, 1, KEY_G)
+					LAYER_MATRIX_KEY(1, 0, 5, KEY_H)
+					LAYER_MATRIX_KEY(1, 1, 5, KEY_MINUS)
+					LAYER_MATRIX_KEY(1, 2, 5, KEY_EQUAL)
+					LAYER_MATRIX_KEY(1, 3, 5, KEY_LEFTBRACE)
+					LAYER_MATRIX_KEY(1, 4, 5, KEY_RIGHTBRACE)
+					LAYER_MATRIX_KEY(1, 5, 5, KEY_BACKSLASH)
+
+					LAYER_MATRIX_KEY(1, 0, 2, KEY_LEFTSHIFT)
+					LAYER_MATRIX_KEY(1, 1, 2, KEY_Z)
+					LAYER_MATRIX_KEY(1, 2, 2, KEY_X)
+					LAYER_MATRIX_KEY(1, 3, 2, KEY_C)
+					LAYER_MATRIX_KEY(1, 4, 2, KEY_V)
+					LAYER_MATRIX_KEY(1, 5, 2, KEY_B)
+					LAYER_MATRIX_KEY(1, 0, 6, KEY_N)
+					LAYER_MATRIX_KEY(1, 1, 6, KEY_M)
+					LAYER_MATRIX_KEY(1, 2, 6, KEY_COMMA)
+					LAYER_MATRIX_KEY(1, 3, 6, KEY_DOT)
+					LAYER_MATRIX_KEY(1, 4, 6, KEY_SLASH)
+					LAYER_MATRIX_KEY(1, 5, 6, KEY_ENTER)
+
+					LAYER_MATRIX_KEY(1, 0, 3, KEY_RIGHTSHIFT)
+					LAYER_MATRIX_KEY(1, 1, 3, KEY_LEFTMETA)
+					LAYER_MATRIX_KEY(1, 2, 3, KEY_LEFTALT)
+					LAYER_MATRIX_KEY(1, 3, 7, KEY_LEFTCTRL)
+					LAYER_MATRIX_KEY(1, 4, 7, KEY_FN)
+					LAYER_MATRIX_KEY(1, 5, 7, KEY_SPACE)
+					LAYER_MATRIX_KEY(1, 0, 7, KEY_SPACE) // space
+					LAYER_MATRIX_KEY(1, 1, 7, KEY_FN)
+					LAYER_MATRIX_KEY(1, 2, 7, KEY_LEFT)
+					LAYER_MATRIX_KEY(1, 3, 3, KEY_DOWN)
+					LAYER_MATRIX_KEY(1, 4, 3, KEY_UP)
+					LAYER_MATRIX_KEY(1, 5, 3, KEY_RIGHT)
+
+					// layer 2
+
+					LAYER_MATRIX_KEY(2, 0, 0, KEY_TAB)
+					LAYER_MATRIX_KEY(2, 1, 0, KEY_Q)
+					LAYER_MATRIX_KEY(2, 2, 0, KEY_W)
+					LAYER_MATRIX_KEY(2, 3, 0, KEY_E)
+					LAYER_MATRIX_KEY(2, 4, 0, KEY_R)
+					LAYER_MATRIX_KEY(2, 5, 0, KEY_T)
+					LAYER_MATRIX_KEY(2, 0, 4, KEY_Y)
+					LAYER_MATRIX_KEY(2, 1, 4, KEY_U)
+					LAYER_MATRIX_KEY(2, 2, 4, KEY_I)
+					LAYER_MATRIX_KEY(2, 3, 4, KEY_O)
+					LAYER_MATRIX_KEY(2, 4, 4, KEY_P)
+					LAYER_MATRIX_KEY(2, 5, 4, KEY_BACKSPACE)
+
+					LAYER_MATRIX_KEY(2, 0, 1, KEY_ESC)
+					LAYER_MATRIX_KEY(2, 1, 1, KEY_A)
+					LAYER_MATRIX_KEY(2, 2, 1, KEY_S)
+					LAYER_MATRIX_KEY(2, 3, 1, KEY_D)
+					LAYER_MATRIX_KEY(2, 4, 1, KEY_F)
+					LAYER_MATRIX_KEY(2, 5, 1, KEY_G)
+					LAYER_MATRIX_KEY(2, 0, 5, KEY_H)
+					LAYER_MATRIX_KEY(2, 1, 5, KEY_J)
+					LAYER_MATRIX_KEY(2, 2, 5, KEY_K)
+					LAYER_MATRIX_KEY(2, 3, 5, KEY_L)
+					LAYER_MATRIX_KEY(2, 4, 5, KEY_SEMICOLON)
+					LAYER_MATRIX_KEY(2, 5, 5, KEY_APOSTROPHE)
+
+					LAYER_MATRIX_KEY(2, 0, 2, KEY_LEFTSHIFT)
+					LAYER_MATRIX_KEY(2, 1, 2, KEY_Z)
+					LAYER_MATRIX_KEY(2, 2, 2, KEY_X)
+					LAYER_MATRIX_KEY(2, 3, 2, KEY_C)
+					LAYER_MATRIX_KEY(2, 4, 2, KEY_V)
+					LAYER_MATRIX_KEY(2, 5, 2, KEY_B)
+					LAYER_MATRIX_KEY(2, 0, 6, KEY_N)
+					LAYER_MATRIX_KEY(2, 1, 6, KEY_M)
+					LAYER_MATRIX_KEY(2, 2, 6, KEY_COMMA)
+					LAYER_MATRIX_KEY(2, 3, 6, KEY_DOT)
+					LAYER_MATRIX_KEY(2, 4, 6, KEY_SLASH)
+					LAYER_MATRIX_KEY(2, 5, 6, KEY_ENTER)
+
+					LAYER_MATRIX_KEY(2, 0, 3, KEY_RIGHTSHIFT)
+					LAYER_MATRIX_KEY(2, 1, 3, KEY_LEFTMETA)
+					LAYER_MATRIX_KEY(2, 2, 3, KEY_LEFTALT)
+					LAYER_MATRIX_KEY(2, 3, 7, KEY_LEFTCTRL)
+					LAYER_MATRIX_KEY(2, 4, 7, KEY_FN)
+					LAYER_MATRIX_KEY(2, 5, 7, KEY_SPACE)
+					LAYER_MATRIX_KEY(2, 0, 7, KEY_SPACE) // space
+					LAYER_MATRIX_KEY(2, 1, 7, KEY_FN)
+					LAYER_MATRIX_KEY(2, 2, 7, KEY_LEFT)
+					LAYER_MATRIX_KEY(2, 3, 3, KEY_DOWN)
+					LAYER_MATRIX_KEY(2, 4, 3, KEY_UP)
+					LAYER_MATRIX_KEY(2, 5, 3, KEY_RIGHT)
+				>;
+			};
+		};
+	};
+};	
