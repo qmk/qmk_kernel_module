@@ -390,11 +390,6 @@ static int qmk_init_gpio(struct platform_device *pdev,
 				   struct qmk *keyboard)
 {
 	const struct qmk_platform_data *pdata = keyboard->pdata;
-	// const struct pinctrl *pinctrl;
-	// const unsigned long row_pin_configs[] = {
-	// 	PIN_CONF_PACKED(PIN_CONFIG_BIAS_PULL_UP, 0)
-	// };
-	// const char * pin_name;
 	int i, err;
 
 	/* initialized strobe lines as outputs, activated */
@@ -410,40 +405,16 @@ static int qmk_init_gpio(struct platform_device *pdev,
 		gpio_direction_output(pdata->col_gpios[i], !pdata->active_low);
 	}
 
-
-	// pinctrl = pinctrl_get_select_default(&pdev->dev);
-
-	// struct pinctrl_map pinmap[pdata->num_row_gpios];
-	// for (i = 0; i < pdata->num_row_gpios; i++) {
-	// 	sprintf(pin_name, "gpio%d", pdata->row_gpios[i]);
-	//     pinmap[i].dev_name = "qmk";
-	// 	pinmap[i].name = PINCTRL_STATE_DEFAULT;				
-	// 	pinmap[i].type = PIN_MAP_TYPE_CONFIGS_PIN;
-	// 	pinmap[i].ctrl_dev_name = "pinctrl";
-	// 	pinmap[i].data.configs.group_or_pin = pin_name;
-	// 	pinmap[i].data.configs.configs = row_pin_configs;			
-	// 	pinmap[i].data.configs.num_configs = 1;
-	// }
-
- //    pinctrl_register_mappings(pinmap, ARRAY_SIZE(pinmap));
-
 	for (i = 0; i < pdata->num_row_gpios; i++) {
 		err = pinctrl_gpio_request(pdata->row_gpios[i]);
 		if (err) {
 			dev_err(&pdev->dev,
 				"failed to request pinctrl for GPIO%d on ROW%d\n",
 				pdata->row_gpios[i], i);
-			goto err_free_row_pins;
+			goto err_free_rows;
 		}
-		// err = gpio_request(pdata->row_gpios[i], "matrix_kbd_row");
-		// if (err) {
-		// 	dev_err(&pdev->dev,
-		// 		"failed to request GPIO%d for ROW%d\n",
-		// 		pdata->row_gpios[i], i);
-		// 	goto err_free_rows;
-		// }
+
 		pinctrl_gpio_set_config(pdata->row_gpios[i], PIN_CONFIG_BIAS_PULL_UP);
-		// gpio_direction_input(pdata->row_gpios[i]);
 		pinctrl_gpio_direction_input(pdata->row_gpios[i]);
 
 	}
@@ -456,7 +427,7 @@ static int qmk_init_gpio(struct platform_device *pdev,
 		if (err < 0) {
 			dev_err(&pdev->dev,
 				"Unable to acquire clustered interrupt\n");
-			goto err_free_row_pins;
+			goto err_free_rows;
 		}
 	} else {
 		for (i = 0; i < pdata->num_row_gpios; i++) {
@@ -483,14 +454,10 @@ err_free_irqs:
 	while (--i >= 0)
 		free_irq(gpio_to_irq(pdata->row_gpios[i]), keyboard);
 	i = pdata->num_row_gpios;
-err_free_row_pins:
+err_free_rows:
 	while (--i >= 0)
 		pinctrl_gpio_free(pdata->row_gpios[i]);
 	i = pdata->num_col_gpios;
-// err_free_rows:
-// 	while (--i >= 0)
-// 		gpio_free(pdata->row_gpios[i]);
-// 	i = pdata->num_col_gpios;
 err_free_cols:
 	while (--i >= 0)
 		gpio_free(pdata->col_gpios[i]);
