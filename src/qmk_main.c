@@ -4,7 +4,7 @@
  *  Copyright (c) 2008 Marek Vasut <marek.vasut@gmail.com>
  *                2019 Jack Humbert <jack.humb@gmail.com>
  *
- *  Based on matrix_keypad.c
+ *  Based on matrix_keypad.c and gpio_keys_polled.c
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 2 as
@@ -16,8 +16,7 @@
 #include <linux/delay.h>
 #include <linux/platform_device.h>
 #include <linux/input.h>
-#include <linux/irq.h>
-#include <linux/interrupt.h>
+#include <linux/input-polldev.h>
 #include <linux/jiffies.h>
 #include <linux/module.h>
 #include <linux/gpio.h>
@@ -29,239 +28,37 @@
 #include <linux/of_platform.h>
 #include <linux/moduleparam.h>
 
-/*
- * NOTE: If drive_inactive_cols is false, then the GPIO has to be put into
- * HiZ when de-activated to cause minmal side effect when scanning other
- * columns. In that case it is configured here to be input, otherwise it is
- * driven with the inactive value.
- */
-static void __activate_col(const struct qmk_platform_data *pdata,
-               int col, bool on)
+static void qmk_start(struct input_polled_dev *poll_dev)
 {
-    bool level_on = !pdata->active_low;
+    // struct qmk *keyboard = poll_dev->private;
+    // const struct qmk_platform_data *pdata = keyboard->pdata;
 
-    if (on) {
-        gpio_direction_output(pdata->col_gpios[col], level_on);
-    } else {
-        gpio_set_value_cansleep(pdata->col_gpios[col], !level_on);
-        if (!pdata->drive_inactive_cols)
-            gpio_direction_input(pdata->col_gpios[col]);
-    }
+    // if (pdata->enable)
+    //     pdata->enable(keyboard->dev);
 }
 
-static void activate_col(const struct qmk_platform_data *pdata,
-             int col, bool on)
+static void qmk_stop(struct input_polled_dev *poll_dev)
 {
-    __activate_col(pdata, col, on);
+    // struct qmk *keyboard = poll_dev->private;
+    // const struct qmk_platform_data *pdata = keyboard->pdata;
 
-    if (on && pdata->col_scan_delay_us)
-        udelay(pdata->col_scan_delay_us);
-}
-
-static void activate_all_cols(const struct qmk_platform_data *pdata, bool on)
-{
-    int col;
-
-    for (col = 0; col < pdata->num_col_gpios; col++)
-        __activate_col(pdata, col, on);
-}
-
-static bool row_asserted(const struct qmk_platform_data *pdata,
-             int row)
-{
-    return gpio_get_value_cansleep(pdata->row_gpios[row]) ?
-            !pdata->active_low : pdata->active_low;
-}
-
-static void enable_row_irqs(struct qmk *keyboard)
-{
-    const struct qmk_platform_data *pdata = keyboard->pdata;
-    int i;
-
-    if (pdata->clustered_irq > 0)
-        enable_irq(pdata->clustered_irq);
-    else {
-        for (i = 0; i < pdata->num_row_gpios; i++)
-            enable_irq(gpio_to_irq(pdata->row_gpios[i]));
-    }
-}
-
-static void disable_row_irqs(struct qmk *keyboard)
-{
-    const struct qmk_platform_data *pdata = keyboard->pdata;
-    int i;
-
-    if (pdata->clustered_irq > 0)
-        disable_irq_nosync(pdata->clustered_irq);
-    else {
-        for (i = 0; i < pdata->num_row_gpios; i++)
-            disable_irq_nosync(gpio_to_irq(pdata->row_gpios[i]));
-    }
-}
-
-/*
- * This gets the keys from keyboard and reports it to input subsystem
- */
-static void qmk_scan(struct work_struct *work)
-{
-    struct qmk *keyboard = container_of(work, struct qmk, work.work);
-    struct input_dev *input_dev = keyboard->input_dev;
-    const struct qmk_platform_data *pdata = keyboard->pdata;
-    uint32_t new_state[MATRIX_MAX_COLS];
-    int row, col;
-    bool pressed = false, key_down = false;
-
-    /* de-activate all columns for scanning */
-    activate_all_cols(pdata, false);
-
-    memset(new_state, 0, sizeof(new_state));
-
-    /* assert each column and read the row status out */
-    for (col = 0; col < pdata->num_col_gpios; col++) {
-
-        activate_col(pdata, col, true);
-
-        for (row = 0; row < pdata->num_row_gpios; row++) {
-            // pinctrl_gpio_set_config(pdata->row_gpios[row], 
-                // PIN_CONFIG_BIAS_PULL_DOWN);
-            new_state[col] |=
-                row_asserted(pdata, row) ? (1 << row) : 0;
-        }
-
-        activate_col(pdata, col, false);
-    }
-
-    for (col = 0; col < pdata->num_col_gpios; col++) {
-        uint32_t bits_changed;
-
-        bits_changed = keyboard->last_key_state[col] ^ new_state[col];
-        if (bits_changed != 0) {
-            for (row = 0; row < pdata->num_row_gpios; row++) {
-                if ((bits_changed & (1 << row)) != 0) {
-                    pressed = new_state[col] & (1 << row);
-                    qmk_process_keycode(keyboard, row, col, pressed);
-                }
-            }
-        }
-        key_down |= new_state[col];
-    }
-    input_sync(input_dev);
-
-    memcpy(keyboard->last_key_state, new_state, sizeof(new_state));
-
-    activate_all_cols(pdata, true);
-
-    if (key_down) {
-        schedule_delayed_work(&keyboard->work,
-            msecs_to_jiffies(keyboard->pdata->col_scan_delay_us));
-    } else {
-        /* Enable IRQs again */
-        spin_lock_irq(&keyboard->lock);
-        keyboard->scan_pending = false;
-        enable_row_irqs(keyboard);
-        spin_unlock_irq(&keyboard->lock);
-    }
-}
-
-static irqreturn_t qmk_interrupt(int irq, void *id)
-{
-    struct qmk *keyboard = id;
-    unsigned long flags;
-
-    spin_lock_irqsave(&keyboard->lock, flags);
-
-    /*
-     * See if another IRQ beaten us to it and scheduled the
-     * scan already. In that case we should not try to
-     * disable IRQs again.
-     */
-    if (unlikely(keyboard->scan_pending || keyboard->stopped))
-        goto out;
-
-    disable_row_irqs(keyboard);
-    keyboard->scan_pending = true;
-    schedule_delayed_work(&keyboard->work,
-        msecs_to_jiffies(keyboard->pdata->debounce_ms));
-
-out:
-    spin_unlock_irqrestore(&keyboard->lock, flags);
-    return IRQ_HANDLED;
-}
-
-static int qmk_start(struct input_dev *dev)
-{
-    struct qmk *keyboard = input_get_drvdata(dev);
-
-    keyboard->stopped = false;
-    mb();
-
-    /*
-     * Schedule an immediate key scan to capture current key state;
-     * columns will be activated and IRQs be enabled after the scan.
-     */
-    schedule_delayed_work(&keyboard->work, 0);
-
-    return 0;
-}
-
-static void qmk_stop(struct input_dev *dev)
-{
-    struct qmk *keyboard = input_get_drvdata(dev);
-
-    spin_lock_irq(&keyboard->lock);
-    keyboard->stopped = true;
-    spin_unlock_irq(&keyboard->lock);
-
-    flush_delayed_work(&keyboard->work);
-    /*
-     * qmk_scan() will leave IRQs enabled;
-     * we should disable them now.
-     */
-    disable_row_irqs(keyboard);
+    // if (pdata->disable)
+    //     pdata->disable(keyboard->dev);
 }
 
 #ifdef CONFIG_PM_SLEEP
 static void qmk_enable_wakeup(struct qmk *keyboard)
 {
-    const struct qmk_platform_data *pdata = keyboard->pdata;
-    unsigned int gpio;
-    int i;
-
-    if (pdata->clustered_irq > 0) {
-        if (enable_irq_wake(pdata->clustered_irq) == 0)
-            keyboard->gpio_all_disabled = true;
-    } else {
-
-        for (i = 0; i < pdata->num_row_gpios; i++) {
-            if (!test_bit(i, keyboard->disabled_gpios)) {
-                gpio = pdata->row_gpios[i];
-
-                if (enable_irq_wake(gpio_to_irq(gpio)) == 0)
-                    __set_bit(i, keyboard->disabled_gpios);
-            }
-        }
-    }
+    // const struct qmk_platform_data *pdata = keyboard->pdata;
+    // unsigned int gpio;
+    // int i;
 }
 
 static void qmk_disable_wakeup(struct qmk *keyboard)
 {
-    const struct qmk_platform_data *pdata = keyboard->pdata;
-    unsigned int gpio;
-    int i;
-
-    if (pdata->clustered_irq > 0) {
-        if (keyboard->gpio_all_disabled) {
-            disable_irq_wake(pdata->clustered_irq);
-            keyboard->gpio_all_disabled = false;
-        }
-    } else {
-        for (i = 0; i < pdata->num_row_gpios; i++) {
-            if (test_and_clear_bit(i, keyboard->disabled_gpios)) {
-                gpio = pdata->row_gpios[i];
-                disable_irq_wake(gpio_to_irq(gpio));
-            }
-        }
-    }
+    // const struct qmk_platform_data *pdata = keyboard->pdata;
+    // unsigned int gpio;
+    // int i;
 }
 
 static int qmk_suspend(struct device *dev)
@@ -322,46 +119,12 @@ static int qmk_init_gpio(struct platform_device *pdev,
             goto err_free_rows;
         }
 
-        pinctrl_gpio_set_config(pdata->row_gpios[i], PIN_CONFIG_BIAS_PULL_UP);
+        pinctrl_gpio_set_config(pdata->row_gpios[i], PIN_CONFIG_BIAS_PULL_DOWN);
         pinctrl_gpio_direction_input(pdata->row_gpios[i]);
-
     }
 
-    if (pdata->clustered_irq > 0) {
-        err = request_any_context_irq(pdata->clustered_irq,
-                qmk_interrupt,
-                pdata->clustered_irq_flags,
-                "qmk", keyboard);
-        if (err < 0) {
-            dev_err(&pdev->dev,
-                "Unable to acquire clustered interrupt\n");
-            goto err_free_rows;
-        }
-    } else {
-        for (i = 0; i < pdata->num_row_gpios; i++) {
-            err = request_any_context_irq(
-                    gpio_to_irq(pdata->row_gpios[i]),
-                    qmk_interrupt,
-                    IRQF_TRIGGER_RISING |
-                    IRQF_TRIGGER_FALLING,
-                    "qmk", keyboard);
-            if (err < 0) {
-                dev_err(&pdev->dev,
-                    "Unable to acquire interrupt for GPIO line %i\n",
-                    pdata->row_gpios[i]);
-                goto err_free_irqs;
-            }
-        }
-    }
-
-    /* initialized as disabled - enabled by input->open */
-    disable_row_irqs(keyboard);
     return 0;
 
-err_free_irqs:
-    while (--i >= 0)
-        free_irq(gpio_to_irq(pdata->row_gpios[i]), keyboard);
-    i = pdata->num_row_gpios;
 err_free_rows:
     while (--i >= 0)
         pinctrl_gpio_free(pdata->row_gpios[i]);
@@ -377,13 +140,6 @@ static void qmk_free_gpio(struct qmk *keyboard)
 {
     const struct qmk_platform_data *pdata = keyboard->pdata;
     int i;
-
-    if (pdata->clustered_irq > 0) {
-        free_irq(pdata->clustered_irq, keyboard);
-    } else {
-        for (i = 0; i < pdata->num_row_gpios; i++)
-            free_irq(gpio_to_irq(pdata->row_gpios[i]), keyboard);
-    }
 
     for (i = 0; i < pdata->num_row_gpios; i++)
         pinctrl_gpio_free(pdata->row_gpios[i]);
@@ -422,6 +178,8 @@ static struct qmk_platform_data *qmk_parse_dt(struct device *dev)
 
     if (of_get_property(np, "linux,no-autorepeat", NULL))
         pdata->no_autorepeat = true;
+
+    of_property_read_u32(np, "poll-interval", &pdata->poll_interval);
 
     pdata->wakeup = of_property_read_bool(np, "wakeup-source") ||
             of_property_read_bool(np, "linux,wakeup"); /* legacy */
@@ -476,72 +234,101 @@ qmk_parse_dt(struct device *dev)
 
 static int qmk_probe(struct platform_device *pdev)
 {
+    struct device *dev = &pdev->dev;
     const struct qmk_platform_data *pdata;
     struct qmk *keyboard;
-    struct input_dev *input_dev;
+    struct input_polled_dev *poll_dev;
+    struct input_dev *input;
+    size_t size;
     int err;
 
-    pdata = dev_get_platdata(&pdev->dev);
+    pdata = dev_get_platdata(dev);
     if (!pdata) {
-        pdata = qmk_parse_dt(&pdev->dev);
+        pdata = qmk_parse_dt(dev);
         if (IS_ERR(pdata))
             return PTR_ERR(pdata);
     } else if (!pdata->keymap_data) {
-        dev_err(&pdev->dev, "no keymap data defined\n");
+        dev_err(dev, "no keymap data defined\n");
         return -EINVAL;
     }
 
-    keyboard = kzalloc(sizeof(struct qmk), GFP_KERNEL);
-    input_dev = input_allocate_device();
-    if (!keyboard || !input_dev) {
+    size = sizeof(struct qmk);
+    keyboard = devm_kzalloc(dev, size, GFP_KERNEL);
+    if (!keyboard) {
+        dev_err(dev, "no memory for keyboard data\n");
         err = -ENOMEM;
-        goto err_free_mem;
+        goto err_free_keyboard;
     }
 
-    keyboard->input_dev = input_dev;
-    keyboard->pdata = pdata;
-    keyboard->row_shift = get_count_order(pdata->num_col_gpios);
-    keyboard->layer_shift = get_count_order(pdata->num_row_gpios 
-                                                << keyboard->row_shift);
-    keyboard->stopped = true;
-    INIT_DELAYED_WORK(&keyboard->work, qmk_scan);
-    spin_lock_init(&keyboard->lock);
+    poll_dev = input_allocate_polled_device();
+    if (!poll_dev) {
+        dev_err(dev, "no memory for polled device\n");
+        err = -ENOMEM;
+        goto err_free_device;
+    }
 
-    input_dev->name     = pdev->name;
-    input_dev->id.bustype   = BUS_HOST;
-    input_dev->dev.parent   = &pdev->dev;
-    input_dev->open     = qmk_start;
-    input_dev->close    = qmk_stop;
+    input                   = poll_dev->input;
+    input->name             = pdev->name;
+    input->phys             = "qmk/input0";
+    input->id.bustype       = BUS_HOST;
+    input->id.vendor        = 0x0001;
+    input->id.product       = 0x0001;
+    input->id.version       = 0x0100;
+    // input->id.vendor        = 0x03A8;
+    // input->id.product       = 0x0068;
+    // input->id.version       = 0x0001;
+    input->dev.parent       = dev;
+    // input->open             = qmk_start;
+    // input->close            = qmk_stop;
+
+    poll_dev->private       = keyboard;
+    poll_dev->poll          = qmk_scan;
+    poll_dev->poll_interval = pdata->poll_interval;
+    poll_dev->open          = qmk_start;
+    poll_dev->close         = qmk_stop;
 
     err = qmk_build_keymap(pdata->keymap_data, "qmk,keymap",
                      pdata->num_layers,
                      pdata->num_row_gpios,
                      pdata->num_col_gpios,
-                     NULL, input_dev);
+                     NULL, input);
     if (err) {
-        dev_err(&pdev->dev, "failed to build keymap\n");
-        goto err_free_mem;
+        dev_err(dev, "failed to build keymap\n");
+        goto err_free_device;
     }
 
     if (!pdata->no_autorepeat)
-        __set_bit(EV_REP, input_dev->evbit);
-    input_set_capability(input_dev, EV_MSC, MSC_SCAN);
-    input_set_drvdata(input_dev, keyboard);
+        __set_bit(EV_REP, input->evbit);
+    input_set_capability(input, EV_MSC, MSC_SCAN);
+    input_set_drvdata(input, keyboard);
+
+    keyboard->poll_dev = poll_dev;
+    keyboard->input_dev = input;
+    keyboard->pdata = pdata;
+    keyboard->dev = dev;
+    keyboard->row_shift = get_count_order(pdata->num_col_gpios);
+    keyboard->layer_shift = get_count_order(pdata->num_row_gpios 
+                                                << keyboard->row_shift);
+    keyboard->stopped = true;
 
     err = qmk_init_gpio(pdev, keyboard);
-    if (err)
-        goto err_free_mem;
+    if (err) {
+        dev_err(dev, "unable to init gpio, err=%d\n", err);
+        goto err_free_device;
+    }
 
-    err = input_register_device(keyboard->input_dev);
-    if (err)
+    err = input_register_polled_device(poll_dev);
+    if (err) {
+        dev_err(dev, "unable to register polled device, err=%d\n", err);
         goto err_free_gpio;
+    }
 
-    device_init_wakeup(&pdev->dev, pdata->wakeup);
+    device_init_wakeup(dev, pdata->wakeup);
     platform_set_drvdata(pdev, keyboard);
 
     err = sysfs_create_group(&pdev->dev.kobj, get_qmk_group());
     if (err) {
-        dev_err(&pdev->dev, "sysfs creation failed\n");
+        dev_err(dev, "sysfs creation failed\n");
         goto err_free_sysfs;
     }
 
@@ -551,19 +338,21 @@ err_free_sysfs:
     sysfs_remove_group(&pdev->dev.kobj, get_qmk_group());
 err_free_gpio:
     qmk_free_gpio(keyboard);
-err_free_mem:
-    input_free_device(input_dev);
-    kfree(keyboard);
+err_free_device:
+    input_free_polled_device(poll_dev);
+err_free_keyboard:
+    devm_kfree(dev, keyboard);
     return err;
 }
 
 static int qmk_remove(struct platform_device *pdev)
 {
     struct qmk *keyboard = platform_get_drvdata(pdev);
+    struct device *dev = &pdev->dev;
 
     qmk_free_gpio(keyboard);
-    input_unregister_device(keyboard->input_dev);
-    kfree(keyboard);
+    input_unregister_polled_device(keyboard->poll_dev);
+    devm_kfree(dev, keyboard);
 
     sysfs_remove_group(&pdev->dev.kobj, get_qmk_group());
 
@@ -589,7 +378,8 @@ static struct platform_driver qmk_driver = {
 };
 module_platform_driver(qmk_driver);
 
-MODULE_AUTHOR("Marek Vasut <marek.vasut@gmail.com>, Jack Humbert <jack.humb@gmail.com>");
+MODULE_AUTHOR("Jack Humbert <jack.humb@gmail.com>");
 MODULE_DESCRIPTION("QMK Feature Support For GPIO Driven Keyboards");
 MODULE_LICENSE("GPL v2");
 MODULE_ALIAS("platform:qmk");
+MODULE_SOFTDEP("pre: input-polldev");

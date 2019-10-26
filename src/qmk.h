@@ -75,6 +75,7 @@ struct qmk_platform_data {
     unsigned int    num_col_gpios;
 
     unsigned int    col_scan_delay_us;
+    unsigned int    poll_interval;
 
     /* key debounce interval in milli-second */
     unsigned int    debounce_ms;
@@ -86,11 +87,15 @@ struct qmk_platform_data {
     bool        wakeup;
     bool        no_autorepeat;
     bool        drive_inactive_cols;
+    int (*enable)(struct device *dev);
+    void (*disable)(struct device *dev);
 };
 
 struct qmk {
     const struct qmk_platform_data *pdata;
+    struct input_polled_dev *poll_dev;
     struct input_dev *input_dev;
+    struct device *dev;
     unsigned int layer_shift;
     unsigned int row_shift;
     
@@ -107,11 +112,10 @@ struct qmk {
 };
 
 struct attribute_group *get_qmk_group(void);
-
+void qmk_scan(struct input_polled_dev *polled_dev);
 void qmk_process_keycode(struct qmk *keyboard, 
                          unsigned int row, unsigned int col, 
                          bool pressed);
-
 int qmk_build_keymap(const struct matrix_keymap_data *keymap_data,
                    const char *keymap_name, unsigned int layers,
                    unsigned int rows, unsigned int cols,
