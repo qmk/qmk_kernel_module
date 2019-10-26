@@ -10,6 +10,7 @@
         __overlay__ {
             keypad: planck {
                 compatible = "qmk";
+                device-name = "Planck Keyboard";
                 debounce-delay-ms = <5>;
                 // drive-inactive-cols;
                 // gpio-activelow;

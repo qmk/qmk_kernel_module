@@ -167,6 +167,7 @@ static struct qmk_platform_data *qmk_parse_dt(struct device *dev)
         return ERR_PTR(-ENOMEM);
     }
 
+    of_property_read_string(np, "device-name", &pdata->name);
     of_property_read_u32(np, "keypad,num-layers", &pdata->num_layers);
 
     pdata->num_row_gpios = nrow = of_gpio_named_count(np, "row-gpios");
@@ -268,15 +269,15 @@ static int qmk_probe(struct platform_device *pdev)
     }
 
     input                   = poll_dev->input;
-    input->name             = pdev->name;
+    input->name             = pdata->name;
     input->phys             = "qmk/input0";
     input->id.bustype       = BUS_HOST;
-    input->id.vendor        = 0x0001;
-    input->id.product       = 0x0001;
-    input->id.version       = 0x0100;
-    // input->id.vendor        = 0x03A8;
-    // input->id.product       = 0x0068;
-    // input->id.version       = 0x0001;
+    // input->id.vendor        = 0x0001;
+    // input->id.product       = 0x0001;
+    // input->id.version       = 0x0100;
+    input->id.vendor        = 0x03A8;
+    input->id.product       = 0x0068;
+    input->id.version       = 0x0001;
     input->dev.parent       = dev;
     // input->open             = qmk_start;
     // input->close            = qmk_stop;

@@ -64,6 +64,7 @@ struct matrix_keymap_data {
  * qmk driver to perform proper initialization.
  */
 struct qmk_platform_data {
+    const char * name;
     const struct matrix_keymap_data *keymap_data;
 
     const unsigned int *row_gpios;

@@ -89,8 +89,9 @@ void qmk_process_keycode(struct qmk *keyboard,
         dev_warn(&input->dev, "unhandled keycode: 0x%x", keycode);
 
     // using the key index for this event is what's done in matrix_keypad
-    input_event(input, EV_MSC, MSC_SCAN, KEY_INDEX(layer));
     input_report_key(input, scancode, pressed);
+    // input_event(input, EV_MSC, MSC_SCAN, KEY_INDEX(0));
+    input_event(input, EV_MSC, MSC_SCAN, scancode);
 
 }
 

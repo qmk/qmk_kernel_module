@@ -1,6 +1,9 @@
+#ifndef _QMK_SCANCODES_H
+#define _QMK_SCANCODES_H
+
 #include <uapi/linux/input-event-codes.h>
 
-unsigned int keycode_to_scancode[256] = {
+static unsigned int keycode_to_scancode[256] = {
   0, //KC_NO
   0, //KC_ROLL_OVER
   0, //KC_POST_FAIL
@@ -211,3 +214,5 @@ unsigned int keycode_to_scancode[256] = {
   KEY_RIGHTMETA
 
 };
+
+#endif

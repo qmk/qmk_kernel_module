@@ -29,6 +29,7 @@
 #include <linux/property.h>
 #include <linux/slab.h>
 #include <linux/types.h>
+#include "qmk_scancodes.h"
 
 static bool qmk_map_key(struct input_dev *input_dev,
                   unsigned int layers, unsigned int layer_shift,
@@ -49,7 +50,9 @@ static bool qmk_map_key(struct input_dev *input_dev,
     }
 
     keymap[QMK_MATRIX_SCAN_CODE(layer, row, col, layer_shift, row_shift)] = code;
-    __set_bit(code, input_dev->keybit);
+    if (code < 0xFF) {
+        __set_bit(keycode_to_scancode[code], input_dev->keybit);
+    }
 
     return true;
 }
