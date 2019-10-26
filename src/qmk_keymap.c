@@ -86,7 +86,7 @@ static int qmk_parse_keymap(const char *propname, unsigned int layers,
 {
 	struct device *dev = input_dev->dev.parent;
 	unsigned int row_shift = get_count_order(cols);
-	unsigned int layer_shift = get_count_order(rows) << row_shift;
+	unsigned int layer_shift = get_count_order(rows << row_shift);
 	unsigned int max_keys = layers << layer_shift;
 	u32 *keys;
 	int i;
@@ -171,7 +171,7 @@ int qmk_build_keymap(const struct matrix_keymap_data *keymap_data,
 {
 	unsigned int row_shift = get_count_order(cols);
 	unsigned int layer_shift = get_count_order(rows << row_shift);
-	size_t max_keys = rows << row_shift << layer_shift;
+	size_t max_keys = layers << layer_shift;
 	int i;
 	int error;
 

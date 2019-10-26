@@ -1,10 +1,10 @@
-#include "linux-event-codes.h"
+#include <uapi/linux/input-event-codes.h>
 
-uint8_t keycode_to_scancode[256] = {
-  0, //KC_NO,
-  0, //KC_ROLL_OVER,
-  0, //KC_POST_FAIL,
-  0, //KC_UNDEFINED,
+unsigned int keycode_to_scancode[256] = {
+  0, //KC_NO
+  0, //KC_ROLL_OVER
+  0, //KC_POST_FAIL
+  0, //KC_UNDEFINED
   KEY_A,
   KEY_B,
   KEY_C,
@@ -51,7 +51,7 @@ uint8_t keycode_to_scancode[256] = {
   KEY_LEFTBRACE,
   KEY_RIGHTBRACE,            //0x30
   KEY_BACKSLASH,
-  0, //KC_NONUS_HASH,
+  0, //KC_NONUS_HASH
   KEY_SEMICOLON,
   KEY_APOSTROPHE,
   KEY_GRAVE,
@@ -71,7 +71,7 @@ uint8_t keycode_to_scancode[256] = {
   KEY_F10,
   KEY_F11,
   KEY_F12,
-  0, //KC_PSCREEN,
+  0, //KC_PSCREEN
   KEY_SCROLLLOCK,
   KEY_PAUSE,
   KEY_INSERT,
@@ -101,8 +101,8 @@ uint8_t keycode_to_scancode[256] = {
   KEY_KP9,
   KEY_KP0,
   KEY_KPDOT,
-  0, //KC_NONUS_BSLASH,
-  0, //KC_APPLICATION,
+  0, //KC_NONUS_BSLASH
+  0, //KC_APPLICATION
   KEY_POWER,
   KEY_KPEQUAL,
   KEY_F13,
@@ -117,7 +117,7 @@ uint8_t keycode_to_scancode[256] = {
   KEY_F22,
   KEY_F23,
   KEY_F24,
-  0, //KC_EXECUTE,
+  0, //KC_EXECUTE
   KEY_HELP,
   KEY_MENU,
   KEY_SELECT,
@@ -131,41 +131,41 @@ uint8_t keycode_to_scancode[256] = {
   KEY_MUTE,
   KEY_VOLUMEUP,              //0x80
   KEY_VOLUMEDOWN,
-  0, //KC_LOCKING_CAPS,
-  0, //KC_LOCKING_NUM,
-  0, //KC_LOCKING_SCROLL,
+  0, //KC_LOCKING_CAPS
+  0, //KC_LOCKING_NUM
+  0, //KC_LOCKING_SCROLL
   KEY_KPCOMMA,
-  0, //KC_KP_EQUAL_AS400,
-  0, //KC_INT1,
-  0, //KC_INT2,
-  0, //KC_INT3,
-  0, //KC_INT4,
-  0, //KC_INT5,
-  0, //KC_INT6,
-  0, //KC_INT7,
-  0, //KC_INT8,
-  0, //KC_INT9,
-  0, //KC_LANG1,               // 0x90
-  0, //KC_LANG2,
-  0, //KC_LANG3,
-  0, //KC_LANG4,
-  0, //KC_LANG5,
-  0, //KC_LANG6,
-  0, //KC_LANG7,
-  0, //KC_LANG8,
-  0, //KC_LANG9,
+  0, //KC_KP_EQUAL_AS400
+  0, //KC_INT1
+  0, //KC_INT2
+  0, //KC_INT3
+  0, //KC_INT4
+  0, //KC_INT5
+  0, //KC_INT6
+  0, //KC_INT7
+  0, //KC_INT8
+  0, //KC_INT9
+  0, //KC_LANG1              // 0x90
+  0, //KC_LANG2
+  0, //KC_LANG3
+  0, //KC_LANG4
+  0, //KC_LANG5
+  0, //KC_LANG6
+  0, //KC_LANG7
+  0, //KC_LANG8
+  0, //KC_LANG9
   KEY_ALTERASE,
   KEY_SYSRQ,
   KEY_CANCEL,
   KEY_CLEAR,
-  0, //KC_PRIOR,
-  0, //KC_RETURN,
-  0, //KC_SEPARATOR,
-  0, //KC_OUT,                 // 0xA0
-  0, //KC_OPER,
-  0, //KC_CLEAR_AGAIN,
-  0, //KC_CRSEL,
-  0, //KC_EXSEL,  
+  0, //KC_PRIOR
+  0, //KC_RETURN
+  0, //KC_SEPARATOR
+  0, //KC_OUT                // 0xA0
+  0, //KC_OPER
+  0, //KC_CLEAR_AGAIN
+  0, //KC_CRSEL
+  0, //KC_EXSEL  
 
   /* Generic Desktop Page (0x01) */
   KEY_POWER,         // 0xA5
@@ -173,7 +173,7 @@ uint8_t keycode_to_scancode[256] = {
   KEY_WAKEUP,
 
   /* Consumer Page (0x0C) */
-  KEY_MUTE,
+  KEY_MUTE, // 0xA8
   KEY_VOLUMEUP,
   KEY_VOLUMEDOWN,
   KEY_NEXTSONG,
@@ -197,11 +197,11 @@ uint8_t keycode_to_scancode[256] = {
   KEY_BRIGHTNESSUP,
   KEY_BRIGHTNESSDOWN,
   0,
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 0xC0
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 0xD0
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 0xC0
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 0xD0
 
   /* Modifiers */
-  KEY_LEFTCTRL            // 0xE0
+  KEY_LEFTCTRL,            // 0xE0
   KEY_LEFTSHIFT,
   KEY_LEFTALT,
   KEY_LEFTMETA,

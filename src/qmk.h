@@ -23,6 +23,8 @@
 
 #define QMK_MATRIX_SCAN_CODE(layer, row, col, layer_shift, row_shift)	(((layer) << (layer_shift)) + ((row) << (row_shift)) + (col))
 
+#define KEY_PRESSED  1
+#define KEY_RELEASED 0
 /**
  * struct matrix_keymap_data - keymap for matrix keyboards
  * @keymap: pointer to array of uint32 values encoded with KEY() macro
@@ -68,7 +70,6 @@ struct qmk_platform_data {
 	const unsigned int *col_gpios;
 
 	unsigned int 	num_layers;
-	unsigned int	layer_state;
 
 	unsigned int	num_row_gpios;
 	unsigned int	num_col_gpios;
@@ -92,6 +93,8 @@ struct qmk {
 	struct input_dev *input_dev;
 	unsigned int layer_shift;
 	unsigned int row_shift;
+	
+	unsigned long layer_state;
 
 	DECLARE_BITMAP(disabled_gpios, MATRIX_MAX_ROWS);
 
@@ -102,6 +105,10 @@ struct qmk {
 	bool stopped;
 	bool gpio_all_disabled;
 };
+
+void qmk_process_keycode(struct qmk *keyboard, 
+						 unsigned int row, unsigned int col, 
+						 bool pressed);
 
 int qmk_build_keymap(const struct matrix_keymap_data *keymap_data,
 			       const char *keymap_name, unsigned int layers,

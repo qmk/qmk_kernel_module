@@ -74,7 +74,7 @@ static ssize_t qmk_layer_state_show(struct device *dev,
 	struct qmk *keyboard = platform_get_drvdata(pdev);
 	int len;
 
-	len = sprintf(buf, "%d\n", keyboard->pdata->layer_state);
+	len = sprintf(buf, "%ld\n", keyboard->layer_state);
 	if (len <= 0)
 		dev_err(dev, "qmk: Invalid sprintf len: %d\n", len);
 
@@ -88,7 +88,7 @@ static ssize_t qmk_layer_state_store(struct device *dev,
 	const struct qmk *keyboard = platform_get_drvdata(pdev);
 	int err;
 
-    err = kstrtouint(buf, 10, &keyboard->pdata->layer_state);
+    err = kstrtoul(buf, 10, &keyboard->layer_state);
     if (err)
     	dev_err(dev, "qmk: kstrtouint error: %d\n", err);
 
@@ -191,10 +191,10 @@ static void qmk_scan(struct work_struct *work)
 {
 	struct qmk *keyboard = container_of(work, struct qmk, work.work);
 	struct input_dev *input_dev = keyboard->input_dev;
-	const unsigned short *keycodes = input_dev->keycode;
 	const struct qmk_platform_data *pdata = keyboard->pdata;
 	uint32_t new_state[MATRIX_MAX_COLS];
-	int row, col, code, layer, i;
+	int row, col;
+	bool pressed = false, key_down = false;
 
 	/* de-activate all columns for scanning */
 	activate_all_cols(pdata, false);
@@ -223,21 +223,9 @@ static void qmk_scan(struct work_struct *work)
 		for (row = 0; row < pdata->num_row_gpios; row++) {
 			if ((bits_changed & (1 << row)) == 0)
 				continue;
-
-			layer = 0;
-			for (i = MATRIX_MAX_LAYERS; i > 0; i--) {
-				if ((pdata->layer_state >> i) & 0b1) {
-					layer = i;
-					break;
-				}
-			}
-			code = QMK_MATRIX_SCAN_CODE(layer, row, col, 
-										keyboard->layer_shift, 
-										keyboard->row_shift);
-			input_event(input_dev, EV_MSC, MSC_SCAN, code);
-			input_report_key(input_dev,
-					 keycodes[code],
-					 new_state[col] & (1 << row));
+			pressed = new_state[col] & (1 << row);
+			key_down |= pressed;
+			qmk_process_keycode(keyboard, row, col, pressed);
 		}
 	}
 	input_sync(input_dev);
@@ -246,11 +234,16 @@ static void qmk_scan(struct work_struct *work)
 
 	activate_all_cols(pdata, true);
 
-	/* Enable IRQs again */
-	spin_lock_irq(&keyboard->lock);
-	keyboard->scan_pending = false;
-	enable_row_irqs(keyboard);
-	spin_unlock_irq(&keyboard->lock);
+	if (key_down) {
+		schedule_delayed_work(&keyboard->work,
+			msecs_to_jiffies(keyboard->pdata->debounce_ms));
+	} else {
+		/* Enable IRQs again */
+		spin_lock_irq(&keyboard->lock);
+		keyboard->scan_pending = false;
+		enable_row_irqs(keyboard);
+		spin_unlock_irq(&keyboard->lock);
+	}
 }
 
 static irqreturn_t qmk_interrupt(int irq, void *id)
@@ -594,8 +587,8 @@ static int qmk_probe(struct platform_device *pdev)
 	keyboard->input_dev = input_dev;
 	keyboard->pdata = pdata;
 	keyboard->row_shift = get_count_order(pdata->num_col_gpios);
-	keyboard->layer_shift = get_count_order(pdata->num_row_gpios) 
-								<< keyboard->row_shift;
+	keyboard->layer_shift = get_count_order(pdata->num_row_gpios 
+												<< keyboard->row_shift);
 	keyboard->stopped = true;
 	INIT_DELAYED_WORK(&keyboard->work, qmk_scan);
 	spin_lock_init(&keyboard->lock);

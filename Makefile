@@ -32,7 +32,7 @@ TARGET := qmk
 ifneq ($(KERNELRELEASE),)
 
 obj-m  := $(TARGET).o
-qmk-y := src/qmk_main.o src/qmk_keymap.o
+qmk-y := src/qmk_main.o src/qmk_keymap.o src/qmk_process.o
 
 else
 
