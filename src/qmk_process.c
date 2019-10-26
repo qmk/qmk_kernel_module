@@ -92,6 +92,5 @@ void qmk_process_keycode(struct qmk *keyboard,
 	input_report_key(input_dev, scancode, pressed);
 
 }
-EXPORT_SYMBOL(qmk_process_keycode);
 
 MODULE_LICENSE("GPL");

@@ -29,90 +29,6 @@
 #include <linux/of_platform.h>
 #include <linux/moduleparam.h>
 
-#include <linux/sysfs.h>
-
-
-/*
- * Attribute definitions for sysfs
- */
-
-static ssize_t qmk_layers_show(struct device *dev, 
-	                           struct device_attribute *attr, char *buf)
-{
-	struct platform_device *pdev = to_platform_device(dev);
-	struct qmk *keyboard = platform_get_drvdata(pdev);
-	int len;
-
-	len = sprintf(buf, "%d\n", keyboard->pdata->num_layers);
-	if (len <= 0)
-		dev_err(dev, "qmk: Invalid sprintf len: %d\n", len);
-
-	return len;
-}
-
-static ssize_t qmk_layers_store(struct device *dev,
-        struct device_attribute *attr, const char *buf, size_t count)
-{
-	struct platform_device *pdev = to_platform_device(dev);
-	const struct qmk *keyboard = platform_get_drvdata(pdev);
-	int err;
-
-    err = kstrtouint(buf, 10, &keyboard->pdata->num_layers);
-    if (err)
-    	dev_err(dev, "qmk: kstrtouint error: %d\n", err);
-
-    return count;
-}
-
-static DEVICE_ATTR(layers, S_IRUGO | S_IWUSR, qmk_layers_show,
-	qmk_layers_store);
-
-static ssize_t qmk_layer_state_show(struct device *dev, 
-	                           struct device_attribute *attr, char *buf)
-{
-	struct platform_device *pdev = to_platform_device(dev);
-	struct qmk *keyboard = platform_get_drvdata(pdev);
-	int len;
-
-	len = sprintf(buf, "%ld\n", keyboard->layer_state);
-	if (len <= 0)
-		dev_err(dev, "qmk: Invalid sprintf len: %d\n", len);
-
-	return len;
-}
-
-static ssize_t qmk_layer_state_store(struct device *dev,
-        struct device_attribute *attr, const char *buf, size_t count)
-{
-	struct platform_device *pdev = to_platform_device(dev);
-	const struct qmk *keyboard = platform_get_drvdata(pdev);
-	int err;
-
-    err = kstrtoul(buf, 10, &keyboard->layer_state);
-    if (err)
-    	dev_err(dev, "qmk: kstrtouint error: %d\n", err);
-
-    return count;
-}
-
-static DEVICE_ATTR(layer_state, S_IRUGO | S_IWUSR, qmk_layer_state_show,
-	qmk_layer_state_store);
-
-static struct attribute *qmk_attrs[] = {
-    &dev_attr_layers.attr,
-    &dev_attr_layer_state.attr,
-    NULL
-};
-
-static struct attribute_group qmk_group = {
-    .attrs = qmk_attrs,
-};
-
-// static struct attribute_group *qmk_groups[] = {
-//     &qmk_group,
-//     NULL
-// };
-
 /*
  * NOTE: If drive_inactive_cols is false, then the GPIO has to be put into
  * HiZ when de-activated to cause minmal side effect when scanning other
@@ -142,8 +58,7 @@ static void activate_col(const struct qmk_platform_data *pdata,
 		udelay(pdata->col_scan_delay_us);
 }
 
-static void activate_all_cols(const struct qmk_platform_data *pdata,
-			      bool on)
+static void activate_all_cols(const struct qmk_platform_data *pdata, bool on)
 {
 	int col;
 
@@ -206,9 +121,12 @@ static void qmk_scan(struct work_struct *work)
 
 		activate_col(pdata, col, true);
 
-		for (row = 0; row < pdata->num_row_gpios; row++)
+		for (row = 0; row < pdata->num_row_gpios; row++) {
+			// pinctrl_gpio_set_config(pdata->row_gpios[row], 
+				// PIN_CONFIG_BIAS_PULL_DOWN);
 			new_state[col] |=
 				row_asserted(pdata, row) ? (1 << row) : 0;
+		}
 
 		activate_col(pdata, col, false);
 	}
@@ -217,16 +135,15 @@ static void qmk_scan(struct work_struct *work)
 		uint32_t bits_changed;
 
 		bits_changed = keyboard->last_key_state[col] ^ new_state[col];
-		if (bits_changed == 0)
-			continue;
-
-		for (row = 0; row < pdata->num_row_gpios; row++) {
-			if ((bits_changed & (1 << row)) == 0)
-				continue;
-			pressed = new_state[col] & (1 << row);
-			key_down |= pressed;
-			qmk_process_keycode(keyboard, row, col, pressed);
+		if (bits_changed != 0) {
+			for (row = 0; row < pdata->num_row_gpios; row++) {
+				if ((bits_changed & (1 << row)) != 0) {
+					pressed = new_state[col] & (1 << row);
+					qmk_process_keycode(keyboard, row, col, pressed);
+				}
+			}
 		}
+		key_down |= new_state[col];
 	}
 	input_sync(input_dev);
 
@@ -236,7 +153,7 @@ static void qmk_scan(struct work_struct *work)
 
 	if (key_down) {
 		schedule_delayed_work(&keyboard->work,
-			msecs_to_jiffies(keyboard->pdata->debounce_ms));
+			msecs_to_jiffies(keyboard->pdata->col_scan_delay_us));
 	} else {
 		/* Enable IRQs again */
 		spin_lock_irq(&keyboard->lock);
@@ -377,8 +294,6 @@ static int qmk_resume(struct device *dev)
 static SIMPLE_DEV_PM_OPS(qmk_pm_ops,
 			 qmk_suspend, qmk_resume);
 
-
-
 static int qmk_init_gpio(struct platform_device *pdev,
 				   struct qmk *keyboard)
 {
@@ -478,8 +393,7 @@ static void qmk_free_gpio(struct qmk *keyboard)
 }
 
 #ifdef CONFIG_OF
-static struct qmk_platform_data *
-qmk_parse_dt(struct device *dev)
+static struct qmk_platform_data *qmk_parse_dt(struct device *dev)
 {
 	struct qmk_platform_data *pdata;
 	struct device_node *np = dev->of_node;
@@ -625,14 +539,16 @@ static int qmk_probe(struct platform_device *pdev)
 	device_init_wakeup(&pdev->dev, pdata->wakeup);
 	platform_set_drvdata(pdev, keyboard);
 
-	err = sysfs_create_group(&pdev->dev.kobj, &qmk_group);
+	err = sysfs_create_group(&pdev->dev.kobj, get_qmk_group());
     if (err) {
         dev_err(&pdev->dev, "sysfs creation failed\n");
-        return err;
+		goto err_free_sysfs;
     }
 
 	return 0;
 
+err_free_sysfs:
+    sysfs_remove_group(&pdev->dev.kobj, get_qmk_group());
 err_free_gpio:
 	qmk_free_gpio(keyboard);
 err_free_mem:
@@ -649,8 +565,7 @@ static int qmk_remove(struct platform_device *pdev)
 	input_unregister_device(keyboard->input_dev);
 	kfree(keyboard);
 
-    sysfs_remove_group(&pdev->dev.kobj, &qmk_group);
-
+    sysfs_remove_group(&pdev->dev.kobj, get_qmk_group());
 
 	return 0;
 }

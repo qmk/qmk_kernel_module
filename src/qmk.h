@@ -106,6 +106,8 @@ struct qmk {
 	bool gpio_all_disabled;
 };
 
+struct attribute_group *get_qmk_group(void);
+
 void qmk_process_keycode(struct qmk *keyboard, 
 						 unsigned int row, unsigned int col, 
 						 bool pressed);
