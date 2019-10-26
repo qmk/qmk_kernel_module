@@ -5,7 +5,7 @@
  *               2019 Jack Humbert <jack.humb@gmail.com>
  *
  * Author:
- *	Olof Johansson <olof@lixom.net>
+ *  Olof Johansson <olof@lixom.net>
  *  Jack Humbert <jack.humb@gmail.com>
  *  Based on matrix-keymap.c
  *
@@ -31,27 +31,27 @@
 #include <linux/types.h>
 
 static bool qmk_map_key(struct input_dev *input_dev,
-				  unsigned int layers, unsigned int layer_shift,
-				  unsigned int rows, unsigned int cols,
-				  unsigned int row_shift, unsigned int key)
+                  unsigned int layers, unsigned int layer_shift,
+                  unsigned int rows, unsigned int cols,
+                  unsigned int row_shift, unsigned int key)
 {
-	unsigned short *keymap = input_dev->keycode;
-	unsigned int layer = KEY_LAYER(key);
-	unsigned int row = KEY_ROW(key);
-	unsigned int col = KEY_COL(key);
-	unsigned short code = KEY_VAL(key);
+    unsigned short *keymap = input_dev->keycode;
+    unsigned int layer = KEY_LAYER(key);
+    unsigned int row = KEY_ROW(key);
+    unsigned int col = KEY_COL(key);
+    unsigned short code = KEY_VAL(key);
 
-	if (layer >= layers || row >= rows || col >= cols) {
-		dev_err(input_dev->dev.parent,
-			"%s: invalid keymap entry 0x%x (layer: %d, row: %d, col: %d, layers: %d, rows: %d, cols: %d)\n",
-			__func__, key, layer, row, col, layers, rows, cols);
-		return false;
-	}
+    if (layer >= layers || row >= rows || col >= cols) {
+        dev_err(input_dev->dev.parent,
+            "%s: invalid keymap entry 0x%x (layer: %d, row: %d, col: %d, layers: %d, rows: %d, cols: %d)\n",
+            __func__, key, layer, row, col, layers, rows, cols);
+        return false;
+    }
 
-	keymap[QMK_MATRIX_SCAN_CODE(layer, row, col, layer_shift, row_shift)] = code;
-	__set_bit(code, input_dev->keybit);
+    keymap[QMK_MATRIX_SCAN_CODE(layer, row, col, layer_shift, row_shift)] = code;
+    __set_bit(code, input_dev->keybit);
 
-	return true;
+    return true;
 }
 
 /**
@@ -64,82 +64,82 @@ static bool qmk_map_key(struct input_dev *input_dev,
  * @return 0 if OK, <0 on error
  */
 int qmk_parse_properties(struct device *dev, unsigned int *layers,
-				   unsigned int *rows, unsigned int *cols)
+                   unsigned int *rows, unsigned int *cols)
 {
-	*layers = *rows = *cols = 0;
+    *layers = *rows = *cols = 0;
 
-	device_property_read_u32(dev, "keypad,num-layers", layers);
-	device_property_read_u32(dev, "keypad,num-rows", rows);
-	device_property_read_u32(dev, "keypad,num-columns", cols);
+    device_property_read_u32(dev, "keypad,num-layers", layers);
+    device_property_read_u32(dev, "keypad,num-rows", rows);
+    device_property_read_u32(dev, "keypad,num-columns", cols);
 
-	if (!*layers || !*rows || !*cols) {
-		dev_err(dev, "number of keyboard layers/rows/columns not specified\n");
-		return -EINVAL;
-	}
+    if (!*layers || !*rows || !*cols) {
+        dev_err(dev, "number of keyboard layers/rows/columns not specified\n");
+        return -EINVAL;
+    }
 
-	return 0;
+    return 0;
 }
 
 static int qmk_parse_keymap(const char *propname, unsigned int layers,
-				      unsigned int rows, unsigned int cols,
-				      struct input_dev *input_dev)
+                      unsigned int rows, unsigned int cols,
+                      struct input_dev *input_dev)
 {
-	struct device *dev = input_dev->dev.parent;
-	unsigned int row_shift = get_count_order(cols);
-	unsigned int layer_shift = get_count_order(rows << row_shift);
-	unsigned int max_keys = layers << layer_shift;
-	u32 *keys;
-	int i;
-	int size;
-	int retval;
+    struct device *dev = input_dev->dev.parent;
+    unsigned int row_shift = get_count_order(cols);
+    unsigned int layer_shift = get_count_order(rows << row_shift);
+    unsigned int max_keys = layers << layer_shift;
+    u32 *keys;
+    int i;
+    int size;
+    int retval;
 
-	if (!propname)
-		propname = "linux,keymap";
+    if (!propname)
+        propname = "linux,keymap";
 
-	size = device_property_read_u32_array(dev, propname, NULL, 0);
-	if (size <= 0) {
-		dev_err(dev, "missing or malformed property %s: %d\n",
-			propname, size);
-		return size < 0 ? size : -EINVAL;
-	}
+    size = device_property_read_u32_array(dev, propname, NULL, 0);
+    if (size <= 0) {
+        dev_err(dev, "missing or malformed property %s: %d\n",
+            propname, size);
+        return size < 0 ? size : -EINVAL;
+    }
 
-	if (size > max_keys) {
-		dev_err(dev, "%s size overflow (%d vs max %u)\n",
-			propname, size, max_keys);
-		return -EINVAL;
-	}
+    if (size > max_keys) {
+        dev_err(dev, "%s size overflow (%d vs max %u)\n",
+            propname, size, max_keys);
+        return -EINVAL;
+    }
 
-	keys = kmalloc_array(size, sizeof(u32), GFP_KERNEL);
-	if (!keys)
-		return -ENOMEM;
+    keys = kmalloc_array(size, sizeof(u32), GFP_KERNEL);
+    if (!keys)
+        return -ENOMEM;
 
-	retval = device_property_read_u32_array(dev, propname, keys, size);
-	if (retval) {
-		dev_err(dev, "failed to read %s property: %d\n",
-			propname, retval);
-		goto out;
-	}
+    retval = device_property_read_u32_array(dev, propname, keys, size);
+    if (retval) {
+        dev_err(dev, "failed to read %s property: %d\n",
+            propname, retval);
+        goto out;
+    }
 
-	for (i = 0; i < size; i++) {
-		if (!qmk_map_key(input_dev, layers, layer_shift, rows, cols,
-					   row_shift, keys[i])) {
-			retval = -EINVAL;
-			goto out;
-		}
-	}
+    for (i = 0; i < size; i++) {
+        if (!qmk_map_key(input_dev, layers, layer_shift, rows, cols,
+                       row_shift, keys[i])) {
+            retval = -EINVAL;
+            goto out;
+        }
+    }
 
-	retval = 0;
+    retval = 0;
 
 out:
-	kfree(keys);
-	return retval;
+    kfree(keys);
+    return retval;
 }
 
 /**
  * qmk_build_keymap - convert platform keymap into matrix keymap
  * @keymap_data: keymap supplied by the platform code
  * @keymap_name: name of device tree property containing keymap (if device
- *	tree support is enabled).
+ *  tree support is enabled).
  * @layers: number of layers in target keymap array
  * @rows: number of rows in target keymap array
  * @cols: number of cols in target keymap array
@@ -164,55 +164,55 @@ out:
  * function.
  */
 int qmk_build_keymap(const struct matrix_keymap_data *keymap_data,
-			       const char *keymap_name, unsigned int layers,
-			       unsigned int rows, unsigned int cols,
-			       unsigned short *keymap,
-			       struct input_dev *input_dev)
+                   const char *keymap_name, unsigned int layers,
+                   unsigned int rows, unsigned int cols,
+                   unsigned short *keymap,
+                   struct input_dev *input_dev)
 {
-	unsigned int row_shift = get_count_order(cols);
-	unsigned int layer_shift = get_count_order(rows << row_shift);
-	size_t max_keys = layers << layer_shift;
-	int i;
-	int error;
+    unsigned int row_shift = get_count_order(cols);
+    unsigned int layer_shift = get_count_order(rows << row_shift);
+    size_t max_keys = layers << layer_shift;
+    int i;
+    int error;
 
-	if (WARN_ON(!input_dev->dev.parent))
-		return -EINVAL;
+    if (WARN_ON(!input_dev->dev.parent))
+        return -EINVAL;
 
-	if (!keymap) {
-		keymap = devm_kcalloc(input_dev->dev.parent,
-				      max_keys, sizeof(*keymap),
-				      GFP_KERNEL);
-		if (!keymap) {
-			dev_err(input_dev->dev.parent,
-				"Unable to allocate memory for keymap");
-			return -ENOMEM;
-		}
-	}
+    if (!keymap) {
+        keymap = devm_kcalloc(input_dev->dev.parent,
+                      max_keys, sizeof(*keymap),
+                      GFP_KERNEL);
+        if (!keymap) {
+            dev_err(input_dev->dev.parent,
+                "Unable to allocate memory for keymap");
+            return -ENOMEM;
+        }
+    }
 
-	input_dev->keycode = keymap;
-	input_dev->keycodesize = sizeof(*keymap);
-	input_dev->keycodemax = max_keys;
+    input_dev->keycode = keymap;
+    input_dev->keycodesize = sizeof(*keymap);
+    input_dev->keycodemax = max_keys;
 
-	__set_bit(EV_KEY, input_dev->evbit);
+    __set_bit(EV_KEY, input_dev->evbit);
 
-	if (keymap_data) {
-		for (i = 0; i < keymap_data->keymap_size; i++) {
-			unsigned int key = keymap_data->keymap[i];
+    if (keymap_data) {
+        for (i = 0; i < keymap_data->keymap_size; i++) {
+            unsigned int key = keymap_data->keymap[i];
 
-			if (!qmk_map_key(input_dev, layers, layer_shift, rows, cols,
-						   row_shift, key))
-				return -EINVAL;
-		}
-	} else {
-		error = qmk_parse_keymap(keymap_name, layers, rows, cols,
-						   input_dev);
-		if (error)
-			return error;
-	}
+            if (!qmk_map_key(input_dev, layers, layer_shift, rows, cols,
+                           row_shift, key))
+                return -EINVAL;
+        }
+    } else {
+        error = qmk_parse_keymap(keymap_name, layers, rows, cols,
+                           input_dev);
+        if (error)
+            return error;
+    }
 
-	__clear_bit(KEY_RESERVED, input_dev->keybit);
+    __clear_bit(KEY_RESERVED, input_dev->keybit);
 
-	return 0;
+    return 0;
 }
 
 MODULE_LICENSE("GPL");
