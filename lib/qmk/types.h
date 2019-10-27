@@ -33,7 +33,6 @@ struct qmk_interface {
     uint8_t rows;
     uint8_t cols;
     qmk_keycode *keymap;
-    void (*send_hid_keycode)(hid_keycode, bool);
     uint16_t layer_state;
 };
 
