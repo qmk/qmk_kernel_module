@@ -119,8 +119,6 @@ struct qmk {
     bool gpio_all_disabled;
 };
 
-int hidg_init(void);
-void hidg_cleanup(void);
 int hidg_plat_driver_probe(struct platform_device *pdev);
 int hidg_plat_driver_remove(struct platform_device *pdev);
 

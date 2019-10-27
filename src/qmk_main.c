@@ -253,6 +253,12 @@ static int qmk_probe(struct platform_device *pdev)
         return -EINVAL;
     }
 
+    err = hidg_plat_driver_probe(pdev);
+    if (err) {
+        dev_err(dev, "hidg probe failed\n");
+        return err;
+    }
+
     size = sizeof(struct qmk);
     keyboard = devm_kzalloc(dev, size, GFP_KERNEL);
     if (!keyboard) {
@@ -333,12 +339,6 @@ static int qmk_probe(struct platform_device *pdev)
         goto err_free_sysfs;
     }
 
-    err = hidg_plat_driver_probe(pdev);
-    if (err) {
-        dev_err(dev, "hidg probe failed\n");
-        goto err_free_sysfs;
-    }
-
     return 0;
 
 err_free_sysfs:
@@ -383,28 +383,20 @@ struct platform_driver qmk_driver = {
         .name   = "qmk",
         .pm = &qmk_pm_ops,
         .of_match_table = of_match_ptr(qmk_dt_match),
+        // .probe_type = PROBE_FORCE_SYNCHRONOUS,
     },
+    // .prevent_deferred_probe = true
 };
 
 // module_platform_driver(qmk_driver);
 static int __init qmk_driver_init(void)
 {
-    int status;
-    status = platform_driver_register(&qmk_driver);
-    if (status < 0)
-        return status;
-
-    status = hidg_init();
-    if (status < 0)
-        platform_driver_unregister(&qmk_driver);
-
-    return status;
+    return platform_driver_register(&qmk_driver);
 }
 
 static void __exit qmk_driver_exit(void)
 {
     platform_driver_unregister(&qmk_driver);
-    hidg_cleanup();
 }
 
 module_init(qmk_driver_init);
