@@ -15,8 +15,8 @@
 
 #include <linux/module.h>
 #include "qmk.h"
-#include "qmk_keycodes_basic.h"
-#include "qmk_keycodes_quantum.h"
+#include <qmk/keycodes/basic.h>
+#include <qmk/keycodes/quantum.h>
 #include "qmk_scancodes.h"
 
 #define KEY_INDEX(layer) QMK_MATRIX_SCAN_CODE(layer, row, col, \

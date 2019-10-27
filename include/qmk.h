@@ -6,6 +6,7 @@
 #include <linux/input.h>
 #include <linux/of.h>
 #include <linux/platform_device.h>
+#include <qmk/types.h>
 
 #define MATRIX_MAX_LAYERS   16
 #define MATRIX_MAX_ROWS     32
@@ -101,6 +102,7 @@ struct qmk_platform_data {
 
 struct qmk {
     const struct qmk_platform_data *pdata;
+    struct qmk_interface *qi;
     struct input_polled_dev *poll_dev;
     struct input_dev *input_dev;
     struct device *dev;

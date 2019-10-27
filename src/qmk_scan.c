@@ -4,6 +4,7 @@
 #include <linux/input.h>
 #include <linux/input-polldev.h>
 #include <linux/delay.h>
+#include <qmk/keycodes/process.h>
 
 /*
  * NOTE: If drive_inactive_cols is false, then the GPIO has to be put into
