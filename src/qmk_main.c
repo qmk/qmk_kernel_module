@@ -333,6 +333,12 @@ static int qmk_probe(struct platform_device *pdev)
         goto err_free_sysfs;
     }
 
+    err = hidg_plat_driver_probe(pdev);
+    if (err) {
+        dev_err(dev, "hidg probe failed\n");
+        goto err_free_sysfs;
+    }
+
     return 0;
 
 err_free_sysfs:
@@ -357,6 +363,8 @@ static int qmk_remove(struct platform_device *pdev)
 
     sysfs_remove_group(&pdev->dev.kobj, get_qmk_group());
 
+    hidg_plat_driver_remove(pdev);
+
     return 0;
 }
 
@@ -368,7 +376,7 @@ static const struct of_device_id qmk_dt_match[] = {
 MODULE_DEVICE_TABLE(of, qmk_dt_match);
 #endif
 
-static struct platform_driver qmk_driver = {
+struct platform_driver qmk_driver = {
     .probe      = qmk_probe,
     .remove     = qmk_remove,
     .driver     = {
@@ -377,10 +385,33 @@ static struct platform_driver qmk_driver = {
         .of_match_table = of_match_ptr(qmk_dt_match),
     },
 };
-module_platform_driver(qmk_driver);
+
+// module_platform_driver(qmk_driver);
+static int __init qmk_driver_init(void)
+{
+    int status;
+    status = platform_driver_register(&qmk_driver);
+    if (status < 0)
+        return status;
+
+    status = hidg_init();
+    if (status < 0)
+        platform_driver_unregister(&qmk_driver);
+
+    return status;
+}
+
+static void __exit qmk_driver_exit(void)
+{
+    platform_driver_unregister(&qmk_driver);
+    hidg_cleanup();
+}
+
+module_init(qmk_driver_init);
+module_exit(qmk_driver_exit);
 
 MODULE_AUTHOR("Jack Humbert <jack.humb@gmail.com>");
 MODULE_DESCRIPTION("QMK Feature Support For GPIO Driven Keyboards");
 MODULE_LICENSE("GPL v2");
 MODULE_ALIAS("platform:qmk");
-MODULE_SOFTDEP("pre: input-polldev");
+MODULE_SOFTDEP("pre: input-polldev ");

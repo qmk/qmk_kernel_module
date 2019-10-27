@@ -32,7 +32,15 @@ TARGET := qmk
 ifneq ($(KERNELRELEASE),)
 
 obj-m  := $(TARGET).o
-qmk-y := src/qmk_main.o src/qmk_keymap.o src/qmk_process.o src/qmk_sysfs.o src/qmk_scan.o
+qmk-y += src/qmk_main.o
+qmk-y += src/qmk_keymap.o 
+qmk-y += src/qmk_process.o 
+qmk-y += src/qmk_sysfs.o 
+qmk-y += src/qmk_scan.o
+qmk-y += src/qmk_gadget.o
+# qmk_hid-y += src/qmk_f_hid.o
+
+EXTRA_CFLAGS=-I$(PWD)/include
 
 else
 
@@ -52,6 +60,7 @@ qmk-clean:
 qmk-install: qmk-default
 	echo "* Installing ${TARGET} module"
 	make -C $(KDIR) M=$(PWD) modules_install
+	depmod
 	echo "  Complete"
 
 qmk-remove:
@@ -63,6 +72,7 @@ qmk-remove:
 
 qmk-load: qmk-default
 	sudo rmmod ${TARGET} 2>/dev/null; true
+	sudo modprobe input-polldev
 	echo "* Loading ${TARGET} module"
 	sudo insmod ./${TARGET}.ko
 	echo "  Complete"
@@ -76,7 +86,7 @@ qmk-unload:
 
 keyboard-default:
 	echo "* Making ${KEYBOARD} overlay"
-	cpp -nostdinc -Isrc/ -I/lib/modules/`uname -r`/build/include/ -undef -x assembler-with-cpp keyboards/${KEYBOARD}.dts > keyboards/${KEYBOARD}.tmp
+	cpp -nostdinc -Iinclude/ -I/lib/modules/`uname -r`/build/include/ -undef -x assembler-with-cpp keyboards/${KEYBOARD}.dts > keyboards/${KEYBOARD}.tmp
 	dtc -W no-unit_address_vs_reg -I dts -O dtb -o keyboards/${KEYBOARD}.dtbo keyboards/${KEYBOARD}.tmp
 	echo "  Complete: keyboards/${KEYBOARD}.dtbo"
 
@@ -101,14 +111,32 @@ keyboard-clean-all:
 	echo "  Complete"
 
 keyboard-load: keyboard-default
-	sudo dtoverlay -r planck 2>/dev/null; true
+	sudo dtoverlay -r ${KEYBOARD} 2>/dev/null; true
 	echo "* Loading ${KEYBOARD} overlay"
 	sudo dtoverlay keyboards/${KEYBOARD}.dtbo
 	echo "  Complete"
 
 keyboard-unload:
 	echo "* Unloading ${KEYBOARD} overlay"
-	sudo dtoverlay -r planck
+	sudo dtoverlay -r ${KEYBOARD}
+	echo "  Complete"
+
+# Custom dwc2
+
+dwc2-default:
+	echo "* Making qmk_dwc2 overlay"
+	dtc -W no-unit_address_vs_reg -I dts -O dtb -o src/qmk_dwc2.dtbo src/qmk_dwc2.dts
+	echo "  Complete: src/qmk_dwc2.dtbo"
+
+dwc2-load:
+	sudo dtoverlay -r qmk_dwc2 2>/dev/null; true
+	echo "* Loading qmk_dwc2 overlay"
+	sudo dtoverlay src/qmk_dwc2.dtbo
+	echo "  Complete"
+
+dwc2-unload:
+	echo "* Unloading qmk_dwc2 overlay"
+	sudo dtoverlay -r qmk_dwc2
 	echo "  Complete"
 
 endif

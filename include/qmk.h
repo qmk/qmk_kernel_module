@@ -5,6 +5,7 @@
 #include <linux/types.h>
 #include <linux/input.h>
 #include <linux/of.h>
+#include <linux/platform_device.h>
 
 #define MATRIX_MAX_LAYERS   16
 #define MATRIX_MAX_ROWS     32
@@ -90,6 +91,12 @@ struct qmk_platform_data {
     bool        drive_inactive_cols;
     int (*enable)(struct device *dev);
     void (*disable)(struct device *dev);
+
+    unsigned char       subclass;
+    unsigned char       protocol;
+    unsigned short      report_length;
+    unsigned short      report_desc_length;
+    unsigned char       report_desc[];
 };
 
 struct qmk {
@@ -111,6 +118,11 @@ struct qmk {
     bool stopped;
     bool gpio_all_disabled;
 };
+
+int hidg_init(void);
+void hidg_cleanup(void);
+int hidg_plat_driver_probe(struct platform_device *pdev);
+int hidg_plat_driver_remove(struct platform_device *pdev);
 
 struct attribute_group *get_qmk_group(void);
 void qmk_scan(struct input_polled_dev *polled_dev);
