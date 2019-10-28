@@ -260,8 +260,9 @@ int hidg_plat_driver_probe(struct platform_device *pdev)
 
 int hidg_plat_driver_remove(struct platform_device *pdev)
 {
-    usb_composite_unregister(&hidg_driver);
     struct hidg_func_node *e, *n;
+
+    usb_composite_unregister(&hidg_driver);
 
     list_for_each_entry_safe(e, n, &hidg_func_list, node) {
         list_del(&e->node);

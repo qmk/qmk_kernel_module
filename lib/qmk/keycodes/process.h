@@ -8,6 +8,6 @@
 #define QMK_ROW_OUT_OF_BOUNDS	2
 #define QMK_COL_OUT_OF_BOUNDS	3
 
-int process_keycode(struct qmk_interface *qi, 
-                    struct qmk_matrix_event ke, 
+int process_keycode(qmk_keyboard *keyboard, 
+                    qmk_matrix_event ke, 
                     qmk_keycode *keycode);

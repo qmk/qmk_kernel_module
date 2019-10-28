@@ -1,6 +1,6 @@
-ifndef VERBOSE
-.SILENT:
-endif
+# ifndef VERBOSE
+# .SILENT:
+# endif
 
 ifeq ($(KEYBOARD),)
 
@@ -32,13 +32,7 @@ TARGET := qmk
 ifneq ($(KERNELRELEASE),)
 
 obj-m  := $(TARGET).o
-qmk-y += lib/libqmk.a
-qmk-y += src/qmk_main.o
-qmk-y += src/qmk_keymap.o 
-qmk-y += src/qmk_process.o 
-qmk-y += src/qmk_sysfs.o 
-qmk-y += src/qmk_scan.o
-qmk-y += src/qmk_gadget.o
+qmk-y += lib/libqmk.a $(patsubst $(PWD)/%.c,%.o,$(shell find $(PWD)/src/ -type f -name '*.c'))
 
 EXTRA_CFLAGS=-I$(PWD)/include -I$(PWD)/lib -L lib -lqmk
 
@@ -47,9 +41,8 @@ else
 # QMK library building
 
 $(PWD)/lib/libqmk.a:
-	echo -n "* Making qmk library...................................."
+	echo "* Making qmk library"
 	make -C $(PWD)/lib/qmk
-	echo "OK"
 
 libqmk-clean:
 	echo -n "* Cleaing qmk library..................................."

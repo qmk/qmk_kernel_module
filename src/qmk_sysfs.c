@@ -62,7 +62,7 @@ static ssize_t qmk_layer_state_store(struct device *dev,
         struct device_attribute *attr, const char *buf, size_t count)
 {
     struct platform_device *pdev = to_platform_device(dev);
-    const struct qmk *keyboard = platform_get_drvdata(pdev);
+    struct qmk *keyboard = platform_get_drvdata(pdev);
     int err;
 
     err = kstrtoul(buf, 10, &keyboard->layer_state);
