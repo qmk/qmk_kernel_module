@@ -56,3 +56,6 @@ The installation was based on [this guide](http://blog.gegg.us/2017/08/a-matrix-
     make KEYBOARD=planck remove     # removes the overlay
     make KEYBOARD=planck clean      # cleans up the build files
 
+## Other info
+
+`sudo apt install xserver-xorg-input-libinput xserver-xorg-input-kbd` may be required to get things working in X (if you've installed the lite version).

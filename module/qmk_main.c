@@ -30,7 +30,7 @@
 
 static void qmk_start(struct input_polled_dev *poll_dev)
 {
-	// struct qmk *keyboard = poll_dev->private;
+	// struct qmk_module *keyboard = poll_dev->private;
 	// const struct qmk_platform_data *pdata = keyboard->pdata;
 
 	// if (pdata->enable)
@@ -39,7 +39,7 @@ static void qmk_start(struct input_polled_dev *poll_dev)
 
 static void qmk_stop(struct input_polled_dev *poll_dev)
 {
-	// struct qmk *keyboard = poll_dev->private;
+	// struct qmk_module *keyboard = poll_dev->private;
 	// const struct qmk_platform_data *pdata = keyboard->pdata;
 
 	// if (pdata->disable)
@@ -47,14 +47,14 @@ static void qmk_stop(struct input_polled_dev *poll_dev)
 }
 
 #ifdef CONFIG_PM_SLEEP
-static void qmk_enable_wakeup(struct qmk *keyboard)
+static void qmk_enable_wakeup(struct qmk_module *keyboard)
 {
 	// const struct qmk_platform_data *pdata = keyboard->pdata;
 	// unsigned int gpio;
 	// int i;
 }
 
-static void qmk_disable_wakeup(struct qmk *keyboard)
+static void qmk_disable_wakeup(struct qmk_module *keyboard)
 {
 	// const struct qmk_platform_data *pdata = keyboard->pdata;
 	// unsigned int gpio;
@@ -64,12 +64,12 @@ static void qmk_disable_wakeup(struct qmk *keyboard)
 static int qmk_suspend(struct device *dev)
 {
 	struct platform_device *pdev = to_platform_device(dev);
-	struct qmk *keyboard = platform_get_drvdata(pdev);
+	struct qmk_module *module = platform_get_drvdata(pdev);
 
-	qmk_stop(keyboard->input_dev);
+	qmk_stop(module->input_dev);
 
 	if (device_may_wakeup(&pdev->dev))
-		qmk_enable_wakeup(keyboard);
+		qmk_enable_wakeup(module);
 
 	return 0;
 }
@@ -77,12 +77,12 @@ static int qmk_suspend(struct device *dev)
 static int qmk_resume(struct device *dev)
 {
 	struct platform_device *pdev = to_platform_device(dev);
-	struct qmk *keyboard = platform_get_drvdata(pdev);
+	struct qmk_module *module = platform_get_drvdata(pdev);
 
 	if (device_may_wakeup(&pdev->dev))
-		qmk_disable_wakeup(keyboard);
+		qmk_disable_wakeup(module);
 
-	qmk_start(keyboard->input_dev);
+	qmk_start(module->input_dev);
 
 	return 0;
 }
@@ -90,65 +90,9 @@ static int qmk_resume(struct device *dev)
 
 static SIMPLE_DEV_PM_OPS(qmk_pm_ops, qmk_suspend, qmk_resume);
 
-static int qmk_init_gpio(struct platform_device *pdev, struct qmk *keyboard)
-{
-	const struct qmk_platform_data *pdata = keyboard->pdata;
-	int i, err;
-
-	/* initialized strobe lines as outputs, activated */
-	for (i = 0; i < pdata->num_col_gpios; i++) {
-		err = gpio_request(pdata->col_gpios[i], "matrix_kbd_col");
-		if (err) {
-			dev_err(&pdev->dev,
-				"failed to request GPIO%d for COL%d\n",
-				pdata->col_gpios[i], i);
-			goto err_free_cols;
-		}
-
-		gpio_direction_output(pdata->col_gpios[i], !pdata->active_low);
-	}
-
-	for (i = 0; i < pdata->num_row_gpios; i++) {
-		err = pinctrl_gpio_request(pdata->row_gpios[i]);
-		if (err) {
-			dev_err(&pdev->dev,
-				"failed to request pinctrl for GPIO%d on ROW%d\n",
-				pdata->row_gpios[i], i);
-			goto err_free_rows;
-		}
-
-		pinctrl_gpio_set_config(pdata->row_gpios[i],
-					PIN_CONFIG_BIAS_PULL_DOWN);
-		pinctrl_gpio_direction_input(pdata->row_gpios[i]);
-	}
-
-	return 0;
-
-err_free_rows:
-	while (--i >= 0)
-		pinctrl_gpio_free(pdata->row_gpios[i]);
-	i = pdata->num_col_gpios;
-err_free_cols:
-	while (--i >= 0)
-		gpio_free(pdata->col_gpios[i]);
-
-	return err;
-}
-
-static void qmk_free_gpio(struct qmk *keyboard)
-{
-	const struct qmk_platform_data *pdata = keyboard->pdata;
-	int i;
-
-	for (i = 0; i < pdata->num_row_gpios; i++)
-		pinctrl_gpio_free(pdata->row_gpios[i]);
-
-	for (i = 0; i < pdata->num_col_gpios; i++)
-		gpio_free(pdata->col_gpios[i]);
-}
-
 #ifdef CONFIG_OF
-static struct qmk_platform_data *qmk_parse_dt(struct device *dev)
+static struct qmk_platform_data *qmk_parse_dt(struct device *dev,
+					      struct qmk_keyboard *keyboard)
 {
 	struct qmk_platform_data *pdata;
 	struct device_node *np = dev->of_node;
@@ -167,11 +111,11 @@ static struct qmk_platform_data *qmk_parse_dt(struct device *dev)
 	}
 
 	of_property_read_string(np, "device-name", &pdata->name);
-	of_property_read_u32(np, "keypad,num-layers", &pdata->num_layers);
+	of_property_read_u32(np, "keypad,num-layers", &keyboard->layers);
 
-	pdata->num_row_gpios = nrow = of_gpio_named_count(np, "row-gpios");
-	pdata->num_col_gpios = ncol = of_gpio_named_count(np, "col-gpios");
-	if (pdata->num_layers <= 0 || nrow <= 0 || ncol <= 0) {
+	keyboard->rows = nrow = of_gpio_named_count(np, "row-gpios");
+	keyboard->cols = ncol = of_gpio_named_count(np, "col-gpios");
+	if (keyboard->layers <= 0 || nrow <= 0 || ncol <= 0) {
 		dev_err(dev,
 			"number of keyboard layers/rows/columns not specified\n");
 		return ERR_PTR(-EINVAL);
@@ -195,7 +139,7 @@ static struct qmk_platform_data *qmk_parse_dt(struct device *dev)
 	of_property_read_u32(np, "col-scan-delay-us",
 			     &pdata->col_scan_delay_us);
 
-	gpios = devm_kcalloc(dev, pdata->num_row_gpios + pdata->num_col_gpios,
+	gpios = devm_kcalloc(dev, keyboard->rows + keyboard->cols,
 			     sizeof(unsigned int), GFP_KERNEL);
 	if (!gpios) {
 		dev_err(dev, "could not allocate memory for gpios\n");
@@ -217,12 +161,13 @@ static struct qmk_platform_data *qmk_parse_dt(struct device *dev)
 	}
 
 	pdata->row_gpios = gpios;
-	pdata->col_gpios = &gpios[pdata->num_row_gpios];
+	pdata->col_gpios = &gpios[keyboard->rows];
 
 	return pdata;
 }
 #else
-static inline struct qmk_platform_data *qmk_parse_dt(struct device *dev)
+static inline struct qmk_platform_data *
+qmk_parse_dt(struct device *dev, struct qmk_keyboard *keyboard)
 {
 	dev_err(dev, "no platform data defined\n");
 
@@ -234,13 +179,22 @@ static int qmk_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
 	const struct qmk_platform_data *pdata;
-	struct qmk *keyboard;
+	struct qmk_module *module;
+	struct qmk_keyboard *keyboard;
 	struct input_polled_dev *poll_dev;
 	struct input_dev *input;
 	size_t size;
 	int err;
 
-	pdata = dev_get_platdata(dev);
+	size = sizeof(struct qmk_keyboard);
+	keyboard = devm_kzalloc(dev, size, GFP_KERNEL);
+	if (!keyboard) {
+		dev_err(dev, "no memory for qmk keyboard\n");
+		err = -ENOMEM;
+		goto err_free_keyboard;
+	}
+
+	pdata = dev_get_platdata(dev, keyboard);
 	if (!pdata) {
 		pdata = qmk_parse_dt(dev);
 		if (IS_ERR(pdata))
@@ -250,13 +204,16 @@ static int qmk_probe(struct platform_device *pdev)
 		return -EINVAL;
 	}
 
-	size = sizeof(struct qmk);
-	keyboard = devm_kzalloc(dev, size, GFP_KERNEL);
-	if (!keyboard) {
-		dev_err(dev, "no memory for keyboard data\n");
+	size = sizeof(struct qmk_module);
+	module = devm_kzalloc(dev, size, GFP_KERNEL);
+	if (!module) {
+		dev_err(dev, "no memory for module data\n");
 		err = -ENOMEM;
-		goto err_free_keyboard;
+		goto err_free_module;
 	}
+
+	module->keyboard = keyboard;
+	keyboard->parent = module;
 
 	poll_dev = input_allocate_polled_device();
 	if (!poll_dev) {
@@ -279,35 +236,37 @@ static int qmk_probe(struct platform_device *pdev)
 	// input->open             = qmk_start;
 	// input->close            = qmk_stop;
 
-	poll_dev->private = keyboard;
+	poll_dev->private = module;
 	poll_dev->poll = qmk_scan;
 	poll_dev->poll_interval = pdata->poll_interval;
 	poll_dev->open = qmk_start;
 	poll_dev->close = qmk_stop;
 
 	err = qmk_build_keymap(pdata->keymap_data, "qmk,keymap",
-			       pdata->num_layers, pdata->num_row_gpios,
-			       pdata->num_col_gpios, NULL, input);
+			       keyboard->layers, keyboard->rows, keyboard->cols,
+			       NULL, input);
 	if (err) {
 		dev_err(dev, "failed to build keymap\n");
 		goto err_free_device;
 	}
 
+	keyboard->keymap = input->keycodes;
+
 	if (!pdata->no_autorepeat)
 		__set_bit(EV_REP, input->evbit);
 	input_set_capability(input, EV_MSC, MSC_SCAN);
-	input_set_drvdata(input, keyboard);
+	input_set_drvdata(input, module);
 
-	keyboard->poll_dev = poll_dev;
-	keyboard->input_dev = input;
-	keyboard->pdata = pdata;
-	keyboard->dev = dev;
-	keyboard->row_shift = get_count_order(pdata->num_col_gpios);
-	keyboard->layer_shift =
-		get_count_order(pdata->num_row_gpios << keyboard->row_shift);
-	keyboard->stopped = true;
+	module->poll_dev = poll_dev;
+	module->input_dev = input;
+	module->pdata = pdata;
+	module->dev = dev;
+	module->row_shift = get_count_order(keyboard->cols);
+	module->layer_shift =
+		get_count_order(keyboard->rows << module->row_shift);
+	module->stopped = true;
 
-	err = qmk_init_gpio(pdev, keyboard);
+	err = qmk_init_gpio(pdev, module);
 	if (err) {
 		dev_err(dev, "unable to init gpio, err=%d\n", err);
 		goto err_free_device;
@@ -320,7 +279,7 @@ static int qmk_probe(struct platform_device *pdev)
 	}
 
 	device_init_wakeup(dev, pdata->wakeup);
-	platform_set_drvdata(pdev, keyboard);
+	platform_set_drvdata(pdev, module);
 
 	err = sysfs_create_group(&pdev->dev.kobj, get_qmk_group());
 	if (err) {
@@ -339,22 +298,24 @@ static int qmk_probe(struct platform_device *pdev)
 err_free_sysfs:
 	sysfs_remove_group(&pdev->dev.kobj, get_qmk_group());
 err_free_gpio:
-	qmk_free_gpio(keyboard);
+	qmk_free_gpio(module);
 err_free_device:
 	input_free_polled_device(poll_dev);
 err_free_keyboard:
 	devm_kfree(dev, keyboard);
+err_free_module:
+	devm_kfree(dev, module);
 	return err;
 }
 
 static int qmk_remove(struct platform_device *pdev)
 {
-	struct qmk *keyboard = platform_get_drvdata(pdev);
+	struct qmk_module *module = platform_get_drvdata(pdev);
 	struct device *dev = &pdev->dev;
 
-	qmk_free_gpio(keyboard);
-	input_unregister_polled_device(keyboard->poll_dev);
-	devm_kfree(dev, keyboard);
+	qmk_free_gpio(module);
+	input_unregister_polled_device(module->poll_dev);
+	devm_kfree(dev, module);
 
 	sysfs_remove_group(&pdev->dev.kobj, get_qmk_group());
 
@@ -370,13 +331,14 @@ MODULE_DEVICE_TABLE(of, qmk_dt_match);
 #endif
 
 struct platform_driver qmk_driver = {
-    .probe      = qmk_probe,
-    .remove     = qmk_remove,
-    .driver     = {
-        .name   = "qmk",
-        .pm = &qmk_pm_ops,
-        .of_match_table = of_match_ptr(qmk_dt_match),
-    },
+	.probe = qmk_probe,
+	.remove = qmk_remove,
+	.driver =
+		{
+			.name = "qmk",
+			.pm = &qmk_pm_ops,
+			.of_match_table = of_match_ptr(qmk_dt_match),
+		},
 };
 
 // module_platform_driver(qmk_driver);

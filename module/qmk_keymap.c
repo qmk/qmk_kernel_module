@@ -99,7 +99,7 @@ static int qmk_parse_keymap(const char *propname, unsigned int layers,
 	int retval;
 
 	if (!propname)
-		propname = "linux,keymap";
+		propname = "qmk,keymap";
 
 	size = device_property_read_u32_array(dev, propname, NULL, 0);
 	if (size <= 0) {

@@ -22,15 +22,14 @@ static ssize_t qmk_keymap_show(struct device *dev,
 			       struct device_attribute *attr, char *buf)
 {
 	struct platform_device *pdev = to_platform_device(dev);
-	struct qmk *keyboard = platform_get_drvdata(pdev);
-	struct input_dev *input_dev = keyboard->input_dev;
+	struct qmk_module *module = platform_get_drvdata(pdev);
+	struct input_dev *input_dev = module->input_dev;
 	const unsigned short *keymap = input_dev->keycode;
 	int len;
 
-	len = sprintf(
-		buf, "%d\n",
-		keymap[QMK_MATRIX_SCAN_CODE(0, 0, 7, keyboard->layer_shift,
-					    keyboard->row_shift)]);
+	len = sprintf(buf, "%d\n",
+		      keymap[QMK_MATRIX_SCAN_CODE(0, 0, 7, module->layer_shift,
+						  module->row_shift)]);
 	if (len <= 0)
 		dev_err(dev, "qmk: Invalid sprintf len: %d\n", len);
 
@@ -51,10 +50,10 @@ static ssize_t qmk_layer_state_show(struct device *dev,
 				    struct device_attribute *attr, char *buf)
 {
 	struct platform_device *pdev = to_platform_device(dev);
-	struct qmk *keyboard = platform_get_drvdata(pdev);
+	struct qmk_module *module = platform_get_drvdata(pdev);
 	int len;
 
-	len = sprintf(buf, "%ld\n", keyboard->layer_state);
+	len = sprintf(buf, "%ld\n", module->layer_state);
 	if (len <= 0)
 		dev_err(dev, "qmk: Invalid sprintf len: %d\n", len);
 
@@ -66,10 +65,10 @@ static ssize_t qmk_layer_state_store(struct device *dev,
 				     const char *buf, size_t count)
 {
 	struct platform_device *pdev = to_platform_device(dev);
-	struct qmk *keyboard = platform_get_drvdata(pdev);
+	struct qmk_module *module = platform_get_drvdata(pdev);
 	int err;
 
-	err = kstrtoul(buf, 10, &keyboard->layer_state);
+	err = kstrtoul(buf, 10, &module->layer_state);
 	if (err)
 		dev_err(dev, "qmk: kstrtouint error: %d\n", err);
 

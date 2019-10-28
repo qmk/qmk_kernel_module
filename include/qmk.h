@@ -42,7 +42,7 @@ struct matrix_keymap_data {
 };
 
 /**
- * struct qmk_platform_data - platform-dependent keypad data
+ * struct qmk_module_platform_data - platform-dependent keypad data
  * @keymap_data: pointer to &matrix_keymap_data
  * @row_gpios: pointer to array of gpio numbers representing rows
  * @col_gpios: pointer to array of gpio numbers reporesenting colums
@@ -72,11 +72,6 @@ struct qmk_platform_data {
 	const unsigned int *row_gpios;
 	const unsigned int *col_gpios;
 
-	unsigned int num_layers;
-
-	unsigned int num_row_gpios;
-	unsigned int num_col_gpios;
-
 	unsigned int col_scan_delay_us;
 	unsigned int poll_interval;
 
@@ -100,9 +95,9 @@ struct qmk_platform_data {
 	unsigned char report_desc[];
 };
 
-struct qmk {
+struct qmk_module {
 	const struct qmk_platform_data *pdata;
-	struct qmk_interface *qi;
+	struct qmk_keyboard *keyboard;
 	struct input_polled_dev *poll_dev;
 	struct input_dev *input_dev;
 	struct device *dev;
@@ -121,6 +116,9 @@ struct qmk {
 	bool gpio_all_disabled;
 };
 
+int qmk_init_gpio(struct platform_device *pdev, struct qmk_module *module);
+void qmk_free_gpio(struct qmk_module *module);
+
 int hidg_init(void);
 void hidg_cleanup(void);
 int hidg_plat_driver_probe(struct platform_device *pdev);
@@ -128,7 +126,7 @@ int hidg_plat_driver_remove(struct platform_device *pdev);
 
 struct attribute_group *get_qmk_group(void);
 void qmk_scan(struct input_polled_dev *polled_dev);
-void qmk_process_keycode(struct qmk *keyboard, unsigned int row,
+void qmk_process_keycode(struct qmk_module *module, unsigned int row,
 			 unsigned int col, bool pressed);
 int qmk_build_keymap(const struct matrix_keymap_data *keymap_data,
 		     const char *keymap_name, unsigned int layers,
