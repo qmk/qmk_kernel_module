@@ -1,6 +1,6 @@
 #pragma once
 
-static __always_inline int fls(int x)
+static inline int fls(int x)
 {
 	int r = 32;
 

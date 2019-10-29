@@ -12,21 +12,22 @@
  *
  */
 
-#include <linux/types.h>
+#include "qmk.h"
 #include <linux/delay.h>
-#include <linux/platform_device.h>
-#include <linux/input.h>
+#include <linux/gpio.h>
 #include <linux/input-polldev.h>
+#include <linux/input.h>
 #include <linux/jiffies.h>
 #include <linux/module.h>
-#include <linux/gpio.h>
-#include <linux/pinctrl/consumer.h>
-#include "qmk.h"
-#include <linux/slab.h>
+#include <linux/moduleparam.h>
 #include <linux/of.h>
 #include <linux/of_gpio.h>
 #include <linux/of_platform.h>
-#include <linux/moduleparam.h>
+#include <linux/pinctrl/consumer.h>
+#include <linux/platform_device.h>
+#include <linux/slab.h>
+#include <linux/types.h>
+#include <qmk/types.h>
 
 static void qmk_start(struct input_polled_dev *poll_dev)
 {
@@ -111,13 +112,19 @@ static struct qmk_platform_data *qmk_parse_dt(struct device *dev,
 	}
 
 	of_property_read_string(np, "device-name", &pdata->name);
-	of_property_read_u8(np, "keypad,num-layers", &keyboard->layers);
-
+	of_property_read_u32(np, "keypad,num-layers", &keyboard->layers);
+	if (keyboard->layers <= 0) {
+		dev_err(dev, "number of keyboard layers not specified\n");
+		return ERR_PTR(-EINVAL);
+	}
 	keyboard->rows = nrow = of_gpio_named_count(np, "row-gpios");
+	if (nrow <= 0) {
+		dev_err(dev, "number of keyboard rows not specified\n");
+		return ERR_PTR(-EINVAL);
+	}
 	keyboard->cols = ncol = of_gpio_named_count(np, "col-gpios");
-	if (keyboard->layers <= 0 || nrow <= 0 || ncol <= 0) {
-		dev_err(dev,
-			"number of keyboard layers/rows/columns not specified\n");
+	if (ncol <= 0) {
+		dev_err(dev, "number of keyboard columns not specified\n");
 		return ERR_PTR(-EINVAL);
 	}
 
@@ -191,7 +198,7 @@ static int qmk_probe(struct platform_device *pdev)
 	if (!keyboard) {
 		dev_err(dev, "no memory for qmk keyboard\n");
 		err = -ENOMEM;
-		goto err_free_keyboard;
+		goto err_no_free;
 	}
 
 	pdata = dev_get_platdata(dev);
@@ -239,12 +246,6 @@ static int qmk_probe(struct platform_device *pdev)
 	// input->open             = qmk_start;
 	// input->close            = qmk_stop;
 
-	poll_dev->private = module;
-	poll_dev->poll = qmk_scan;
-	poll_dev->poll_interval = pdata->poll_interval;
-	poll_dev->open = qmk_start;
-	poll_dev->close = qmk_stop;
-
 	err = qmk_build_keymap(pdata->keymap_data, "qmk,keymap",
 			       keyboard->layers, keyboard->rows, keyboard->cols,
 			       NULL, input);
@@ -252,6 +253,12 @@ static int qmk_probe(struct platform_device *pdev)
 		dev_err(dev, "failed to build keymap\n");
 		goto err_free_device;
 	}
+
+	poll_dev->private = module;
+	poll_dev->poll = qmk_scan;
+	poll_dev->poll_interval = pdata->poll_interval;
+	poll_dev->open = qmk_start;
+	poll_dev->close = qmk_stop;
 
 	keyboard->keymap = input->keycode;
 
@@ -275,9 +282,6 @@ static int qmk_probe(struct platform_device *pdev)
 		goto err_free_device;
 	}
 
-	device_init_wakeup(dev, pdata->wakeup);
-	platform_set_drvdata(pdev, module);
-
 	err = sysfs_create_group(&pdev->dev.kobj, get_qmk_group());
 	if (err) {
 		dev_err(dev, "sysfs creation failed\n");
@@ -290,6 +294,9 @@ static int qmk_probe(struct platform_device *pdev)
 		goto err_free_sysfs;
 	}
 
+	device_init_wakeup(dev, pdata->wakeup);
+	platform_set_drvdata(pdev, module);
+
 	err = hidg_plat_driver_probe(pdev);
 	if (err) {
 		dev_err(dev, "hidg probe failed\n");
@@ -299,7 +306,7 @@ static int qmk_probe(struct platform_device *pdev)
 	return 0;
 
 err_free_polled:
-	input_unregister_polled_device(module->poll_dev);
+	input_unregister_polled_device(poll_dev);
 err_free_sysfs:
 	sysfs_remove_group(&pdev->dev.kobj, get_qmk_group());
 err_free_gpio:
@@ -310,6 +317,7 @@ err_free_module:
 	devm_kfree(dev, module);
 err_free_keyboard:
 	devm_kfree(dev, keyboard);
+err_no_free:
 	return err;
 }
 

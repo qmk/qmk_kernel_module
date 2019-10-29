@@ -18,6 +18,8 @@
                 poll-interval = <2>;
                 
                 keypad,num-layers = <3>;
+                keypad,num-columns = <6>;
+                keypad,num-rows = <8>;
                 col-gpios = <&gpio 20 0
                              &gpio 21 0
                              &gpio 6  0
@@ -89,17 +91,17 @@
 
                     // layer 1
 
-                    LAYER_MATRIX_KEY(1, 0, 0, KC_GRAVE)
-                    LAYER_MATRIX_KEY(1, 0, 1, KC_1)
-                    LAYER_MATRIX_KEY(1, 0, 2, KC_2)
-                    LAYER_MATRIX_KEY(1, 0, 3, KC_3)
-                    LAYER_MATRIX_KEY(1, 0, 4, KC_4)
-                    LAYER_MATRIX_KEY(1, 0, 5, KC_5)
-                    LAYER_MATRIX_KEY(1, 4, 0, KC_6)
-                    LAYER_MATRIX_KEY(1, 4, 1, KC_7)
-                    LAYER_MATRIX_KEY(1, 4, 2, KC_8)
-                    LAYER_MATRIX_KEY(1, 4, 3, KC_9)
-                    LAYER_MATRIX_KEY(1, 4, 4, KC_0)
+                    LAYER_MATRIX_KEY(1, 0, 0, S(KC_GRAVE))
+                    LAYER_MATRIX_KEY(1, 0, 1, S(KC_1))
+                    LAYER_MATRIX_KEY(1, 0, 2, S(KC_2))
+                    LAYER_MATRIX_KEY(1, 0, 3, S(KC_3))
+                    LAYER_MATRIX_KEY(1, 0, 4, S(KC_4))
+                    LAYER_MATRIX_KEY(1, 0, 5, S(KC_5))
+                    LAYER_MATRIX_KEY(1, 4, 0, S(KC_6))
+                    LAYER_MATRIX_KEY(1, 4, 1, S(KC_7))
+                    LAYER_MATRIX_KEY(1, 4, 2, S(KC_8))
+                    LAYER_MATRIX_KEY(1, 4, 3, S(KC_9))
+                    LAYER_MATRIX_KEY(1, 4, 4, S(KC_0))
                     LAYER_MATRIX_KEY(1, 4, 5, KC_BSPC)
 
                     LAYER_MATRIX_KEY(1, 1, 0, KC_DEL)
@@ -109,11 +111,11 @@
                     LAYER_MATRIX_KEY(1, 1, 4, KC_F)
                     LAYER_MATRIX_KEY(1, 1, 5, KC_G)
                     LAYER_MATRIX_KEY(1, 5, 0, KC_H)
-                    LAYER_MATRIX_KEY(1, 5, 1, KC_MINS)
-                    LAYER_MATRIX_KEY(1, 5, 2, KC_EQL)
-                    LAYER_MATRIX_KEY(1, 5, 3, KC_LBRC)
-                    LAYER_MATRIX_KEY(1, 5, 4, KC_RBRC)
-                    LAYER_MATRIX_KEY(1, 5, 5, KC_BSLS)
+                    LAYER_MATRIX_KEY(1, 5, 1, S(KC_MINS))
+                    LAYER_MATRIX_KEY(1, 5, 2, S(KC_EQL))
+                    LAYER_MATRIX_KEY(1, 5, 3, S(KC_LBRC))
+                    LAYER_MATRIX_KEY(1, 5, 4, S(KC_RBRC))
+                    LAYER_MATRIX_KEY(1, 5, 5, S(KC_BSLS))
 
                     LAYER_MATRIX_KEY(1, 2, 0, KC_LSFT)
                     LAYER_MATRIX_KEY(1, 2, 1, KC_Z)

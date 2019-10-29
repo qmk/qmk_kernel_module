@@ -13,13 +13,11 @@
  * GNU General Public License for more details.
  */
 
-#include <qmk/keycodes/process.h>
 #include <qmk/keycodes/basic.h>
+#include <qmk/keycodes/process.h>
 #include <qmk/keycodes/quantum.h>
 #include <qmk/keymap.h>
-
-#include <qmk/keycodes/process/layer.h>
-#include <qmk/keycodes/process/mods.h>
+#include <qmk/protocol.h>
 
 bool process_basic(struct qmk_keyboard *keyboard, qmk_keycode_t *keycode,
 		   bool pressed)
@@ -30,33 +28,36 @@ bool process_basic(struct qmk_keyboard *keyboard, qmk_keycode_t *keycode,
 	return false;
 }
 
-int process_keycode(struct qmk_keyboard *keyboard, struct qmk_matrix_event me,
+int process_keycode(struct qmk_keyboard *keyboard, struct qmk_matrix_event *me,
 		    qmk_keycode_t *keycode)
 {
 	bool handled = false;
-	uint8_t i;
+	int i;
 	uint8_t layer = 0;
 	*keycode = KC_NO;
 
-	if (me.row >= keyboard->rows)
+	protocol.printf("matrix event at (%d, %d, %s)\n", me->row, me->col,
+			(me->pressed ? "down" : "up"));
+
+	if (me->row >= keyboard->rows)
 		return QMK_ROW_OUT_OF_BOUNDS;
-	if (me.col >= keyboard->cols)
+	if (me->col >= keyboard->cols)
 		return QMK_COL_OUT_OF_BOUNDS;
 
 	for (i = keyboard->layers - 1; i >= 0; i--) {
 		if (((keyboard->layer_state >> i) & 1) &&
-		    keycode_from_keymap(keyboard, i, me.row, me.col) !=
+		    keycode_from_keymap(keyboard, i, me->row, me->col) !=
 			    KC_TRNS) {
 			layer = i;
 			break;
 		}
 	}
 
-	*keycode = keycode_from_keymap(keyboard, layer, me.row, me.col);
+	*keycode = keycode_from_keymap(keyboard, layer, me->row, me->col);
 
-	handled = process_layer(keyboard, keycode, me.pressed) ||
-		  process_mods(keyboard, keycode, me.pressed) ||
-		  process_basic(keyboard, keycode, me.pressed);
+	handled = process_layer(keyboard, keycode, me->pressed) ||
+		  process_mods(keyboard, keycode, me->pressed) ||
+		  process_basic(keyboard, keycode, me->pressed);
 
 	if (handled) {
 		return 0;

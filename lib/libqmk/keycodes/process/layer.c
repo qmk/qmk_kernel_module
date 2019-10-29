@@ -1,4 +1,4 @@
-#include <qmk/keycodes/process/layer.h>
+#include <qmk/keycodes/process.h>
 #include <qmk/protocol.h>
 #include <qmk/keycodes/quantum.h>
 

@@ -27,7 +27,7 @@ struct qmk_matrix_event {
 
 struct qmk_keyboard {
 	void *parent;
-	uint8_t layers;
+	uint32_t layers;
 	uint8_t rows;
 	uint8_t cols;
 	qmk_keycode_t *keymap;

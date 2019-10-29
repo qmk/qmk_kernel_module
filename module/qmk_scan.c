@@ -1,9 +1,9 @@
 #include "qmk.h"
-#include <linux/gpio.h>
-#include <linux/pinctrl/consumer.h>
-#include <linux/input.h>
-#include <linux/input-polldev.h>
 #include <linux/delay.h>
+#include <linux/gpio.h>
+#include <linux/input-polldev.h>
+#include <linux/input.h>
+#include <linux/pinctrl/consumer.h>
 #include <qmk/keycodes/process.h>
 #include <qmk/protocol.h>
 #include <qmk/types.h>
@@ -103,10 +103,13 @@ void qmk_scan(struct input_polled_dev *polled_dev)
 	struct qmk_keyboard *keyboard = module->keyboard;
 	const struct qmk_platform_data *pdata = module->pdata;
 	uint32_t new_state[MATRIX_MAX_COLS];
-	int row, col;
-	bool pressed, handled;
-	qmk_keycode_t keycode;
-	struct qmk_matrix_event event;
+	int row, col, handled;
+	bool pressed;
+	qmk_keycode_t keycode = 0;
+
+	struct qmk_matrix_event *event;
+
+	event = devm_kzalloc(&input->dev, sizeof(*event), GFP_KERNEL);
 
 	memset(new_state, 0, sizeof(new_state));
 
@@ -130,12 +133,12 @@ void qmk_scan(struct input_polled_dev *polled_dev)
 			for (row = 0; row < keyboard->rows; row++) {
 				if ((bits_changed & (1 << row))) {
 					pressed = new_state[col] & (1 << row);
-					event.row = row;
-					event.col = col;
-					event.pressed = pressed;
+					event->row = row;
+					event->col = col;
+					event->pressed = pressed;
 					handled = process_keycode(
 						keyboard, event, &keycode);
-					if (!handled) {
+					if (handled == QMK_UNHANDLED_KEYCODE) {
 						dev_warn(
 							&input->dev,
 							"unhandled keycode: 0x%x",

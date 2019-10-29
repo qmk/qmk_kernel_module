@@ -1,6 +1,7 @@
 #include <linux/timer.h>
 #include <qmk/protocol.h>
 #include <linux/input.h>
+#include <linux/printk.h>
 #include "qmk_scancodes.h"
 #include "qmk.h"
 
@@ -30,4 +31,5 @@ const struct qmk_protocol protocol = {
 	.timer_init = &timer_init,
 	.timer_elapsed = &timer_elapsed,
 	.send_keycode = &send_keycode,
+	.printf = &printk,
 };
