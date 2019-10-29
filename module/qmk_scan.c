@@ -108,9 +108,6 @@ void qmk_scan(struct input_polled_dev *polled_dev)
 	qmk_keycode_t keycode;
 	struct qmk_matrix_event event;
 
-	/* de-activate all columns for scanning */
-	// activate_all_cols(pdata, false);
-
 	memset(new_state, 0, sizeof(new_state));
 
 	/* assert each column and read the row status out */
@@ -118,8 +115,6 @@ void qmk_scan(struct input_polled_dev *polled_dev)
 		activate_col(pdata, col, true);
 
 		for (row = 0; row < keyboard->rows; row++) {
-			// pinctrl_gpio_set_config(pdata->row_gpios[row],
-			//     PIN_CONFIG_BIAS_PULL_DOWN);
 			new_state[col] |=
 				row_asserted(pdata, row) ? (1 << row) : 0;
 		}
@@ -156,6 +151,4 @@ void qmk_scan(struct input_polled_dev *polled_dev)
 	input_sync(input);
 
 	memcpy(module->last_key_state, new_state, sizeof(new_state));
-
-	// activate_all_cols(pdata, true);
 }

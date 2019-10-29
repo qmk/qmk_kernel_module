@@ -111,7 +111,7 @@ static struct qmk_platform_data *qmk_parse_dt(struct device *dev,
 	}
 
 	of_property_read_string(np, "device-name", &pdata->name);
-	of_property_read_u32(np, "keypad,num-layers", &keyboard->layers);
+	of_property_read_u8(np, "keypad,num-layers", &keyboard->layers);
 
 	keyboard->rows = nrow = of_gpio_named_count(np, "row-gpios");
 	keyboard->cols = ncol = of_gpio_named_count(np, "col-gpios");
@@ -194,14 +194,17 @@ static int qmk_probe(struct platform_device *pdev)
 		goto err_free_keyboard;
 	}
 
-	pdata = dev_get_platdata(dev, keyboard);
+	pdata = dev_get_platdata(dev);
 	if (!pdata) {
-		pdata = qmk_parse_dt(dev);
-		if (IS_ERR(pdata))
-			return PTR_ERR(pdata);
+		pdata = qmk_parse_dt(dev, keyboard);
+		if (IS_ERR(pdata)) {
+			err = PTR_ERR(pdata);
+			goto err_free_keyboard;
+		}
 	} else if (!pdata->keymap_data) {
 		dev_err(dev, "no keymap data defined\n");
-		return -EINVAL;
+		err = -EINVAL;
+		goto err_free_keyboard;
 	}
 
 	size = sizeof(struct qmk_module);
@@ -250,7 +253,7 @@ static int qmk_probe(struct platform_device *pdev)
 		goto err_free_device;
 	}
 
-	keyboard->keymap = input->keycodes;
+	keyboard->keymap = input->keycode;
 
 	if (!pdata->no_autorepeat)
 		__set_bit(EV_REP, input->evbit);
@@ -272,39 +275,41 @@ static int qmk_probe(struct platform_device *pdev)
 		goto err_free_device;
 	}
 
-	err = input_register_polled_device(poll_dev);
-	if (err) {
-		dev_err(dev, "unable to register polled device, err=%d\n", err);
-		goto err_free_gpio;
-	}
-
 	device_init_wakeup(dev, pdata->wakeup);
 	platform_set_drvdata(pdev, module);
 
 	err = sysfs_create_group(&pdev->dev.kobj, get_qmk_group());
 	if (err) {
 		dev_err(dev, "sysfs creation failed\n");
+		goto err_free_gpio;
+	}
+
+	err = input_register_polled_device(poll_dev);
+	if (err) {
+		dev_err(dev, "unable to register polled device, err=%d\n", err);
 		goto err_free_sysfs;
 	}
 
 	err = hidg_plat_driver_probe(pdev);
 	if (err) {
 		dev_err(dev, "hidg probe failed\n");
-		goto err_free_sysfs;
+		goto err_free_polled;
 	}
 
 	return 0;
 
+err_free_polled:
+	input_unregister_polled_device(module->poll_dev);
 err_free_sysfs:
 	sysfs_remove_group(&pdev->dev.kobj, get_qmk_group());
 err_free_gpio:
 	qmk_free_gpio(module);
 err_free_device:
 	input_free_polled_device(poll_dev);
-err_free_keyboard:
-	devm_kfree(dev, keyboard);
 err_free_module:
 	devm_kfree(dev, module);
+err_free_keyboard:
+	devm_kfree(dev, keyboard);
 	return err;
 }
 

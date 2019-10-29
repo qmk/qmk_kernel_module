@@ -126,8 +126,6 @@ int hidg_plat_driver_remove(struct platform_device *pdev);
 
 struct attribute_group *get_qmk_group(void);
 void qmk_scan(struct input_polled_dev *polled_dev);
-void qmk_process_keycode(struct qmk_module *module, unsigned int row,
-			 unsigned int col, bool pressed);
 int qmk_build_keymap(const struct matrix_keymap_data *keymap_data,
 		     const char *keymap_name, unsigned int layers,
 		     unsigned int rows, unsigned int cols,

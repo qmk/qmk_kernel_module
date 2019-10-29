@@ -26,7 +26,7 @@ void send_keycode(struct qmk_keyboard *keyboard, hid_keycode_t keycode,
 	input_event(input, EV_MSC, MSC_SCAN, scancode);
 }
 
-struct qmk_protocol protocol = {
+const struct qmk_protocol protocol = {
 	.timer_init = &timer_init,
 	.timer_elapsed = &timer_elapsed,
 	.send_keycode = &send_keycode,

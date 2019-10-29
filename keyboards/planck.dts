@@ -18,8 +18,6 @@
                 poll-interval = <2>;
                 
                 keypad,num-layers = <3>;
-                keypad,num-columns = <6>;
-                keypad,num-rows = <8>;
                 col-gpios = <&gpio 20 0
                              &gpio 21 0
                              &gpio 6  0
