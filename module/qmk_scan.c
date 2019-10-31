@@ -83,7 +83,8 @@ static void activate_col(const struct qmk_platform_data *pdata, int col,
 		if (pdata->col_scan_delay_us)
 			udelay(pdata->col_scan_delay_us);
 	} else {
-		gpio_direction_output(pdata->col_gpios[col], !level_on);
+		// gpio_direction_output(pdata->col_gpios[col], !level_on);
+		gpio_set_value_cansleep(pdata->col_gpios[col], !level_on);
 	}
 }
 
@@ -103,8 +104,8 @@ void qmk_scan(struct input_polled_dev *polled_dev)
 	struct qmk_keyboard *keyboard = module->keyboard;
 	const struct qmk_platform_data *pdata = module->pdata;
 	uint32_t new_state[MATRIX_MAX_COLS];
-	int row, col, handled;
-	bool pressed;
+	int row, col;
+	bool pressed, handled;
 	qmk_keycode_t keycode = 0;
 
 	struct qmk_matrix_event *event;
@@ -136,9 +137,13 @@ void qmk_scan(struct input_polled_dev *polled_dev)
 					event->row = row;
 					event->col = col;
 					event->pressed = pressed;
-					handled = process_keycode(
-						keyboard, event, &keycode);
-					if (handled == QMK_UNHANDLED_KEYCODE) {
+					handled =
+						process_keycode(keyboard, event,
+								&keycode) ||
+						process_qkm(keyboard, &keycode,
+							    pressed);
+
+					if (!handled) {
 						dev_warn(
 							&input->dev,
 							"unhandled keycode: 0x%x",

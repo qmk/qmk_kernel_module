@@ -17,6 +17,11 @@
                 col-scan-delay-us = <1000>;
                 poll-interval = <2>;
                 
+                qmk,encoder-gpios = <&gpio 5 0
+                                     &gpio 7 0
+                                     &gpio 8 0>;
+                qmk,encoder-keys = <KC_VOLU KC_VOLD>;
+
                 keypad,num-layers = <3>;
                 keypad,num-columns = <6>;
                 keypad,num-rows = <8>;

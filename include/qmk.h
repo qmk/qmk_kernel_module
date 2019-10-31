@@ -116,6 +116,9 @@ struct qmk_module {
 	bool gpio_all_disabled;
 };
 
+bool process_qkm(struct qmk_keyboard *keyboard, qmk_keycode_t *keycode,
+		 bool pressed);
+
 int qmk_init_gpio(struct platform_device *pdev, struct qmk_module *module);
 void qmk_free_gpio(struct qmk_module *module);
 

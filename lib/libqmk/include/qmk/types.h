@@ -11,6 +11,7 @@
 typedef uint8_t hid_keycode_t;
 typedef uint16_t qmk_keycode_t;
 typedef uint8_t qmk_layer;
+typedef uint8_t io_t;
 
 struct qmk_matrix_event {
 	uint8_t row;
@@ -33,4 +34,9 @@ struct qmk_keyboard {
 	qmk_keycode_t *keymap;
 	uint16_t layer_state;
 	uint16_t mod_tap_timeout;
+	uint8_t encoder_ab_count;
+	uint8_t encoder_c_count;
+	io_t *encoder_a;
+	io_t *encoder_b;
+	io_t *encoder_c;
 };

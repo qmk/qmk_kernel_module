@@ -28,8 +28,8 @@ bool process_basic(struct qmk_keyboard *keyboard, qmk_keycode_t *keycode,
 	return false;
 }
 
-int process_keycode(struct qmk_keyboard *keyboard, struct qmk_matrix_event *me,
-		    qmk_keycode_t *keycode)
+bool process_keycode(struct qmk_keyboard *keyboard, struct qmk_matrix_event *me,
+		     qmk_keycode_t *keycode)
 {
 	bool handled = false;
 	int i;
@@ -55,13 +55,7 @@ int process_keycode(struct qmk_keyboard *keyboard, struct qmk_matrix_event *me,
 
 	*keycode = keycode_from_keymap(keyboard, layer, me->row, me->col);
 
-	handled = process_layer(keyboard, keycode, me->pressed) ||
-		  process_mods(keyboard, keycode, me->pressed) ||
-		  process_basic(keyboard, keycode, me->pressed);
-
-	if (handled) {
-		return 0;
-	} else {
-		return QMK_UNHANDLED_KEYCODE;
-	}
+	return process_layer(keyboard, keycode, me->pressed) ||
+	       process_mods(keyboard, keycode, me->pressed) ||
+	       process_basic(keyboard, keycode, me->pressed);
 }
