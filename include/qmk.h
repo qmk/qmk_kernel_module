@@ -122,11 +122,6 @@ bool process_qkm(struct qmk_keyboard *keyboard, qmk_keycode_t *keycode,
 int qmk_init_gpio(struct platform_device *pdev, struct qmk_module *module);
 void qmk_free_gpio(struct qmk_module *module);
 
-int hidg_init(void);
-void hidg_cleanup(void);
-int hidg_plat_driver_probe(struct platform_device *pdev);
-int hidg_plat_driver_remove(struct platform_device *pdev);
-
 struct attribute_group *get_qmk_group(void);
 void qmk_scan(struct input_polled_dev *polled_dev);
 int qmk_build_keymap(const struct matrix_keymap_data *keymap_data,

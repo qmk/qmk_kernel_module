@@ -94,6 +94,8 @@ static bool row_asserted(const struct qmk_platform_data *pdata, int row)
 						       pdata->active_low;
 }
 
+void qmk_analyze_state(struct qmk_module *module, uint32_t *new_state);
+
 /*
  * This gets the keys from keyboard and reports it to input subsystem
  */
@@ -103,16 +105,12 @@ void qmk_scan(struct input_polled_dev *polled_dev)
 	struct input_dev *input = module->input_dev;
 	struct qmk_keyboard *keyboard = module->keyboard;
 	const struct qmk_platform_data *pdata = module->pdata;
-	uint32_t new_state[MATRIX_MAX_COLS];
+	uint32_t *new_state;
 	int row, col;
-	bool pressed, handled;
-	qmk_keycode_t keycode = 0;
 
-	struct qmk_matrix_event *event;
 
-	event = devm_kzalloc(&input->dev, sizeof(*event), GFP_KERNEL);
-
-	memset(new_state, 0, sizeof(new_state));
+	new_state = devm_kzalloc(&input->dev, sizeof(*new_state), GFP_KERNEL);
+	memset(new_state, 0, sizeof(*new_state));
 
 	/* assert each column and read the row status out */
 	for (col = 0; col < keyboard->cols; col++) {
@@ -125,6 +123,21 @@ void qmk_scan(struct input_polled_dev *polled_dev)
 
 		activate_col(pdata, col, false);
 	}
+
+	qmk_analyze_state(module, new_state);
+	devm_kfree(&input->dev, new_state);
+}
+
+void qmk_analyze_state(struct qmk_module *module, uint32_t *new_state)
+{
+	struct input_dev *input = module->input_dev;
+	struct qmk_keyboard *keyboard = module->keyboard;
+	int row, col;
+	struct qmk_matrix_event *event;
+	qmk_keycode_t keycode = 0;
+	bool pressed, handled;
+
+	event = devm_kzalloc(&input->dev, sizeof(*event), GFP_KERNEL);
 
 	for (col = 0; col < keyboard->cols; col++) {
 		uint32_t bits_changed;
@@ -158,5 +171,5 @@ void qmk_scan(struct input_polled_dev *polled_dev)
 	}
 	input_sync(input);
 
-	memcpy(module->last_key_state, new_state, sizeof(new_state));
+	memcpy(module->last_key_state, new_state, sizeof(*new_state));
 }

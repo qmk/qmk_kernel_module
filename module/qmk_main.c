@@ -13,6 +13,7 @@
  */
 
 #include "qmk.h"
+#include "qmk_gadget.h"
 #include <linux/delay.h>
 #include <linux/gpio.h>
 #include <linux/input-polldev.h>
@@ -28,6 +29,8 @@
 #include <linux/slab.h>
 #include <linux/types.h>
 #include <qmk/types.h>
+
+int hid_output, midi_output;
 
 static void qmk_start(struct input_polled_dev *poll_dev)
 {
@@ -297,11 +300,11 @@ static int qmk_probe(struct platform_device *pdev)
 	device_init_wakeup(dev, pdata->wakeup);
 	platform_set_drvdata(pdev, module);
 
-	err = hidg_plat_driver_probe(pdev);
-	if (err) {
-		dev_err(dev, "hidg probe failed\n");
-		goto err_free_polled;
-	}
+	err = gadget_init();
+    if (err) {
+		dev_err(dev, "gadget init failed\n");
+       goto err_free_polled;
+    }
 
 	return 0;
 
@@ -332,7 +335,7 @@ static int qmk_remove(struct platform_device *pdev)
 
 	sysfs_remove_group(&pdev->dev.kobj, get_qmk_group());
 
-	hidg_plat_driver_remove(pdev);
+	gadget_exit();
 
 	return 0;
 }
@@ -359,20 +362,12 @@ static int __init qmk_driver_init(void)
 {
 	int status;
 	status = platform_driver_register(&qmk_driver);
-	if (status < 0)
-		return status;
-
-	status = hidg_init();
-	if (status < 0)
-		platform_driver_unregister(&qmk_driver);
-
 	return status;
 }
 
 static void __exit qmk_driver_exit(void)
 {
 	platform_driver_unregister(&qmk_driver);
-	hidg_cleanup();
 }
 
 module_init(qmk_driver_init);
@@ -383,3 +378,4 @@ MODULE_DESCRIPTION("QMK Feature Support For GPIO Driven Keyboards");
 MODULE_LICENSE("GPL v2");
 MODULE_ALIAS("platform:qmk");
 MODULE_SOFTDEP("pre: input-polldev ");
+MODULE_SOFTDEP("pre: configfs ");

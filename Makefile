@@ -27,17 +27,19 @@ load-all: qmk-load keyboard-load
 
 TARGET := qmk
 
+KDIR := /lib/modules/$(shell uname -r)/build
+
 ifneq ($(KERNELRELEASE),)
 
 obj-m  := $(TARGET).o
 qmk-src := $(patsubst $(PWD)/%,%,$(shell find $(PWD)/module/ -type f -name '*.c'))
 qmk-objs := $(patsubst $(PWD)/%.c,%.o,$(shell find $(PWD)/module/ -type f -name '*.c')) lib/libqmk.a
 
-EXTRA_CFLAGS=-I$(PWD)/include -I$(PWD)/lib/libqmk/include -L lib -lqmk
+EXTRA_CFLAGS = -I$(PWD)/include -I$(PWD)/lib/libqmk/include -I/usr/include -I/usr/include/arm-linux-gnueabihf
+EXTRA_CFLAGS += -L lib -L /usr/lib -L /usr/lib/arm-linux-gnueabihf -l:libqmk.a -lusbgx
 
 else
 
-KDIR := /lib/modules/$(shell uname -r)/build
 PWD = $(shell pwd)
 
 include $(KDIR)/tools/scripts/Makefile.include

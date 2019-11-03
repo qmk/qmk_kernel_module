@@ -15,6 +15,10 @@ This is a QMK-inspired kernel module based on `matrix_keypad`, which includes in
 
 ### Building
 
+You'll need the Raspberry Pi kernel headers installed, along with the basic tools for building, and some tools for testing:
+
+    sudo apt install raspberrypi-kernel-headers git bc bison flex libssl-dev evtest input-utils
+
     make            # builds the kernel module
     make load       # builds and loads the kernel module
     make unload     # unloads the kernel module
