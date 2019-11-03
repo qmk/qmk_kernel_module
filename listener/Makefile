@@ -1,3 +1,3 @@
 
 default:
-	gcc -o qmk_listener listener.c
+	gcc -o qmk_listener qmk_listener.c -lncurses

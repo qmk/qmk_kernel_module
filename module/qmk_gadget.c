@@ -1,56 +1,72 @@
 #include <linux/module.h>
-#include <net/sock.h> 
+#include <linux/kernel.h>
 #include <linux/netlink.h>
-#include <linux/skbuff.h> 
-#include "qmk_gadget.h" 
-#define NETLINK_USER 31
+#include <net/netlink.h>
+#include <net/net_namespace.h>
 
-struct sock *nl_sk = NULL;
+/* Protocol family, consistent in both kernel prog and user prog. */
+#define MYPROTO NETLINK_USERSOCK
+/* Multicast group, consistent in both kernel prog and user prog. */
+#define MYGRP 1
 
-void hello_nl_recv_msg(struct sk_buff *skb)
+static struct sock *nl_sk = NULL;
+
+void nl_input(struct sk_buff *skb)
 {
+    pr_info("data ready");
+}
 
+int nl_bind(struct net *net, int group) {
+    pr_info("bind");
+    return 0;
+}
+
+void send_socket_message(char * msg)
+{
+    struct sk_buff *skb;
     struct nlmsghdr *nlh;
-    int pid;
-    struct sk_buff *skb_out;
-    int msg_size;
-    char *msg = "Hello from kernel";
+    int msg_size = strlen(msg) + 1;
     int res;
 
-    printk(KERN_INFO "Entering: %s\n", __FUNCTION__);
-
-    msg_size = strlen(msg);
-
-    nlh = (struct nlmsghdr *)skb->data;
-    printk(KERN_INFO "Netlink received msg payload:%s\n", (char *)nlmsg_data(nlh));
-    pid = nlh->nlmsg_pid; /*pid of sending process */
-
-    skb_out = nlmsg_new(msg_size, 0);
-    if (!skb_out) {
-        printk(KERN_ERR "Failed to allocate new skb\n");
+    skb = nlmsg_new(NLMSG_ALIGN(msg_size + 1), GFP_KERNEL);
+    if (!skb) {
+        pr_err("Allocation failure.\n");
         return;
     }
 
-    nlh = nlmsg_put(skb_out, 0, 0, NLMSG_DONE, msg_size, 0);
-    NETLINK_CB(skb_out).dst_group = 0; /* not in mcast group */
-    strncpy(nlmsg_data(nlh), msg, msg_size);
+    nlh = nlmsg_put(skb, 0, 1, NLMSG_DONE, msg_size + 1, 0);
+    strcpy(nlmsg_data(nlh), msg);
 
-    res = nlmsg_unicast(nl_sk, skb_out, pid);
-    if (res < 0)
-        printk(KERN_INFO "Error while sending bak to user\n");
+    res = nlmsg_multicast(nl_sk, skb, 0, MYGRP, GFP_KERNEL);
+    if (res < 0 && res != -3)
+        pr_info("nlmsg_multicast() error: %d\n", res);
+
 }
+
+int send_socket_message_f(const char *fmt, ...)
+{
+    va_list args;
+    int i;
+    char *buf = kzalloc(200*sizeof(char), GFP_KERNEL);
+
+    va_start(args, fmt);
+    i=vsprintf(buf,fmt,args);
+    send_socket_message(buf);
+    va_end(args);
+    return i;
+}
+
+static struct netlink_kernel_cfg nl_cfg = {
+    .input = &nl_input,
+    .bind = &nl_bind
+};
 
 int gadget_init(void)
 {
+    nl_sk = netlink_kernel_create(&init_net, MYPROTO, &nl_cfg);
 
-    //nl_sk = netlink_kernel_create(&init_net, NETLINK_USER, 0, hello_nl_recv_msg, NULL, THIS_MODULE);
-    struct netlink_kernel_cfg cfg = {
-        .input = hello_nl_recv_msg,
-    };
-
-    nl_sk = netlink_kernel_create(&init_net, NETLINK_USER, &cfg);
     if (!nl_sk) {
-        printk(KERN_ALERT "Error creating socket.\n");
+        pr_err("Error creating socket.\n");
         return -10;
     }
 
@@ -59,6 +75,6 @@ int gadget_init(void)
 
 void gadget_exit(void)
 {
-
     netlink_kernel_release(nl_sk);
+    pr_info("Exiting hello module.\n");
 }

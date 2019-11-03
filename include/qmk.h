@@ -109,12 +109,18 @@ struct qmk_module {
 	DECLARE_BITMAP(disabled_gpios, MATRIX_MAX_ROWS);
 
 	uint32_t last_key_state[MATRIX_MAX_COLS];
+	uint32_t current_key_state[MATRIX_MAX_COLS];
 	struct delayed_work work;
 	spinlock_t lock;
 	bool scan_pending;
 	bool stopped;
 	bool gpio_all_disabled;
 };
+
+int send_socket_message_f(const char *fmt, ...);
+void send_socket_message(char * msg);
+int gadget_init(void);
+void gadget_exit(void);
 
 bool process_qkm(struct qmk_keyboard *keyboard, qmk_keycode_t *keycode,
 		 bool pressed);

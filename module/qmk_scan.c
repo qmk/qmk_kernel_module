@@ -94,7 +94,7 @@ static bool row_asserted(const struct qmk_platform_data *pdata, int row)
 						       pdata->active_low;
 }
 
-void qmk_analyze_state(struct qmk_module *module, uint32_t *new_state);
+void qmk_analyze_state(struct qmk_module *module);
 
 /*
  * This gets the keys from keyboard and reports it to input subsystem
@@ -102,33 +102,28 @@ void qmk_analyze_state(struct qmk_module *module, uint32_t *new_state);
 void qmk_scan(struct input_polled_dev *polled_dev)
 {
 	struct qmk_module *module = polled_dev->private;
-	struct input_dev *input = module->input_dev;
 	struct qmk_keyboard *keyboard = module->keyboard;
 	const struct qmk_platform_data *pdata = module->pdata;
-	uint32_t *new_state;
 	int row, col;
 
-
-	new_state = devm_kzalloc(&input->dev, sizeof(*new_state), GFP_KERNEL);
-	memset(new_state, 0, sizeof(*new_state));
+	memset(module->current_key_state, 0, sizeof(module->current_key_state));
 
 	/* assert each column and read the row status out */
 	for (col = 0; col < keyboard->cols; col++) {
 		activate_col(pdata, col, true);
 
 		for (row = 0; row < keyboard->rows; row++) {
-			new_state[col] |=
+			module->current_key_state[col] |=
 				row_asserted(pdata, row) ? (1 << row) : 0;
 		}
 
 		activate_col(pdata, col, false);
 	}
 
-	qmk_analyze_state(module, new_state);
-	devm_kfree(&input->dev, new_state);
+	qmk_analyze_state(module);
 }
 
-void qmk_analyze_state(struct qmk_module *module, uint32_t *new_state)
+void qmk_analyze_state(struct qmk_module *module)
 {
 	struct input_dev *input = module->input_dev;
 	struct qmk_keyboard *keyboard = module->keyboard;
@@ -142,11 +137,12 @@ void qmk_analyze_state(struct qmk_module *module, uint32_t *new_state)
 	for (col = 0; col < keyboard->cols; col++) {
 		uint32_t bits_changed;
 
-		bits_changed = module->last_key_state[col] ^ new_state[col];
+		bits_changed = module->last_key_state[col] ^ module->current_key_state[col];
 		if (bits_changed != 0) {
+			send_socket_message_f("Analyzing col[%d] state: %d", col, module->current_key_state[col]);
 			for (row = 0; row < keyboard->rows; row++) {
 				if ((bits_changed & (1 << row))) {
-					pressed = new_state[col] & (1 << row);
+					pressed = module->current_key_state[col] & (1 << row);
 					event->row = row;
 					event->col = col;
 					event->pressed = pressed;
@@ -171,5 +167,5 @@ void qmk_analyze_state(struct qmk_module *module, uint32_t *new_state)
 	}
 	input_sync(input);
 
-	memcpy(module->last_key_state, new_state, sizeof(*new_state));
+	memcpy(module->last_key_state, module->current_key_state, sizeof(module->current_key_state));
 }

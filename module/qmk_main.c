@@ -13,7 +13,6 @@
  */
 
 #include "qmk.h"
-#include "qmk_gadget.h"
 #include <linux/delay.h>
 #include <linux/gpio.h>
 #include <linux/input-polldev.h>
@@ -300,16 +299,8 @@ static int qmk_probe(struct platform_device *pdev)
 	device_init_wakeup(dev, pdata->wakeup);
 	platform_set_drvdata(pdev, module);
 
-	err = gadget_init();
-    if (err) {
-		dev_err(dev, "gadget init failed\n");
-       goto err_free_polled;
-    }
-
 	return 0;
 
-err_free_polled:
-	input_unregister_polled_device(poll_dev);
 err_free_sysfs:
 	sysfs_remove_group(&pdev->dev.kobj, get_qmk_group());
 err_free_gpio:
@@ -335,8 +326,6 @@ static int qmk_remove(struct platform_device *pdev)
 
 	sysfs_remove_group(&pdev->dev.kobj, get_qmk_group());
 
-	gadget_exit();
-
 	return 0;
 }
 
@@ -361,13 +350,24 @@ struct platform_driver qmk_driver = {
 static int __init qmk_driver_init(void)
 {
 	int status;
+	status = gadget_init();
+
 	status = platform_driver_register(&qmk_driver);
+    if (status)
+       goto err_free_gadget;
+
+    return status;
+
+err_free_gadget:
+	gadget_exit();
+
 	return status;
 }
 
 static void __exit qmk_driver_exit(void)
 {
 	platform_driver_unregister(&qmk_driver);
+	gadget_exit();
 }
 
 module_init(qmk_driver_init);
