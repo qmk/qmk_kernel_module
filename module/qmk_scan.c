@@ -137,12 +137,14 @@ void qmk_analyze_state(struct qmk_module *module)
 	for (col = 0; col < keyboard->cols; col++) {
 		uint32_t bits_changed;
 
-		bits_changed = module->last_key_state[col] ^ module->current_key_state[col];
+		bits_changed = module->last_key_state[col] ^
+			       module->current_key_state[col];
 		if (bits_changed != 0) {
-			send_socket_message_f("Analyzing col[%d] state: %d", col, module->current_key_state[col]);
 			for (row = 0; row < keyboard->rows; row++) {
 				if ((bits_changed & (1 << row))) {
-					pressed = module->current_key_state[col] & (1 << row);
+					pressed =
+						module->current_key_state[col] &
+						(1 << row);
 					event->row = row;
 					event->col = col;
 					event->pressed = pressed;
@@ -159,13 +161,16 @@ void qmk_analyze_state(struct qmk_module *module)
 							keycode);
 					}
 
-					protocol.send_keycode(keyboard, keycode,
-							      pressed);
+					// don't actually need to handle this here
+
+					// protocol.send_keycode(keyboard, keycode,
+					// 		      pressed);
 				}
 			}
 		}
 	}
 	input_sync(input);
 
-	memcpy(module->last_key_state, module->current_key_state, sizeof(module->current_key_state));
+	memcpy(module->last_key_state, module->current_key_state,
+	       sizeof(module->current_key_state));
 }

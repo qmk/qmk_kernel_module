@@ -36,6 +36,7 @@ bool process_mods(struct qmk_keyboard *keyboard, qmk_keycode_t *keycode,
 						      pressed);
 		}
 		*keycode = *keycode & 0xFF;
+		protocol.send_keycode(keyboard, *keycode, pressed);
 		return true;
 		break;
 	default:

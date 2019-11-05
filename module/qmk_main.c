@@ -377,5 +377,4 @@ MODULE_AUTHOR("Jack Humbert <jack.humb@gmail.com>");
 MODULE_DESCRIPTION("QMK Feature Support For GPIO Driven Keyboards");
 MODULE_LICENSE("GPL v2");
 MODULE_ALIAS("platform:qmk");
-MODULE_SOFTDEP("pre: input-polldev ");
-MODULE_SOFTDEP("pre: configfs ");
+MODULE_SOFTDEP("pre: input-polldev");

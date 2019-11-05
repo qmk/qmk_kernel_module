@@ -8,6 +8,9 @@
 #include <linux/platform_device.h>
 #include <qmk/types.h>
 
+#define MSG_GENERIC 0x01
+#define KEYCODE_HID 0x02
+
 #define MATRIX_MAX_LAYERS 16
 #define MATRIX_MAX_ROWS 32
 #define MATRIX_MAX_COLS 32

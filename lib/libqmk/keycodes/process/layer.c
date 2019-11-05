@@ -21,8 +21,10 @@ bool process_layer(struct qmk_keyboard *keyboard, qmk_keycode_t *keycode,
 			if (timer) {
 				uint16_t time_elapsed =
 					protocol.timer_elapsed(timer);
-				if (time_elapsed < keyboard->mod_tap_timeout)
-					*keycode = basic_keycode;
+				if (time_elapsed < keyboard->mod_tap_timeout) {
+					protocol.send_keycode(keyboard, basic_keycode, true);
+					protocol.send_keycode(keyboard, basic_keycode, false);
+				}
 			}
 		}
 		return true;

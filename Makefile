@@ -62,6 +62,7 @@ qmk-clean: libqmk-clean
 
 qmk-install: qmk-default
 	$(call descend,$(KDIR),M=$(PWD) modules_install)
+	depmod -a
 
 qmk-remove:
 	@echo "* This will delete /lib/modules/`uname -r`/extra/${TARGET}.ko"

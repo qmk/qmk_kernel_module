@@ -5,7 +5,8 @@ endif
 CC = gcc
 TARGET = ../libqmk.a
 
-CFLAGS = -O0 -g -Wall -c -fshort-wchar -ffreestanding -march=armv7-a -mfloat-abi=softfp -mfpu=neon
+# CFLAGS = -O0 -g -Wall -c -fshort-wchar -ffreestanding -march=armv7-a -mfloat-abi=softfp -mfpu=neon
+CFLAGS = -O0 -g -Wall -c -fshort-wchar -ffreestanding -mfloat-abi=softfp -mfpu=neon
 
 INC = -Iinclude
 BUILD_DIR = .build

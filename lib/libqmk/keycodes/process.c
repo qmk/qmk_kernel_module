@@ -23,6 +23,7 @@ bool process_basic(struct qmk_keyboard *keyboard, qmk_keycode_t *keycode,
 		   bool pressed)
 {
 	if (*keycode < 0xFF) {
+		protocol.send_keycode(keyboard, *keycode, pressed);
 		return true;
 	}
 	return false;
@@ -31,13 +32,13 @@ bool process_basic(struct qmk_keyboard *keyboard, qmk_keycode_t *keycode,
 bool process_keycode(struct qmk_keyboard *keyboard, struct qmk_matrix_event *me,
 		     qmk_keycode_t *keycode)
 {
-	bool handled = false;
+	// bool handled = false;
 	int i;
 	uint8_t layer = 0;
 	*keycode = KC_NO;
 
-	protocol.printf("matrix event at (%d, %d, %s)\n", me->row, me->col,
-			(me->pressed ? "down" : "up"));
+	// protocol.printf("matrix event at (%d, %d, %s)\n", me->row, me->col,
+	// 		(me->pressed ? "down" : "up"));
 
 	if (me->row >= keyboard->rows)
 		return QMK_ROW_OUT_OF_BOUNDS;

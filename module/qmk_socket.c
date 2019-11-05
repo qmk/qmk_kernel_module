@@ -76,5 +76,5 @@ int gadget_init(void)
 void gadget_exit(void)
 {
     netlink_kernel_release(nl_sk);
-    pr_info("Exiting hello module.\n");
+    // pr_info("Exiting hello module.\n");
 }

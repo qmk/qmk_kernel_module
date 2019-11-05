@@ -45,27 +45,27 @@
                     LAYER_MATRIX_KEY(0, 0, 0, KC_TAB)
                     LAYER_MATRIX_KEY(0, 0, 1, KC_Q)
                     LAYER_MATRIX_KEY(0, 0, 2, KC_W)
-                    LAYER_MATRIX_KEY(0, 0, 3, KC_E)
-                    LAYER_MATRIX_KEY(0, 0, 4, KC_R)
-                    LAYER_MATRIX_KEY(0, 0, 5, KC_T)
-                    LAYER_MATRIX_KEY(0, 4, 0, KC_Y)
-                    LAYER_MATRIX_KEY(0, 4, 1, KC_U)
-                    LAYER_MATRIX_KEY(0, 4, 2, KC_I)
-                    LAYER_MATRIX_KEY(0, 4, 3, KC_O)
-                    LAYER_MATRIX_KEY(0, 4, 4, KC_P)
+                    LAYER_MATRIX_KEY(0, 0, 3, KC_F)
+                    LAYER_MATRIX_KEY(0, 0, 4, KC_P)
+                    LAYER_MATRIX_KEY(0, 0, 5, KC_G)
+                    LAYER_MATRIX_KEY(0, 4, 0, KC_J)
+                    LAYER_MATRIX_KEY(0, 4, 1, KC_L)
+                    LAYER_MATRIX_KEY(0, 4, 2, KC_U)
+                    LAYER_MATRIX_KEY(0, 4, 3, KC_Y)
+                    LAYER_MATRIX_KEY(0, 4, 4, KC_SCLN)
                     LAYER_MATRIX_KEY(0, 4, 5, KC_BSPC)
 
                     LAYER_MATRIX_KEY(0, 1, 0, KC_ESC)
                     LAYER_MATRIX_KEY(0, 1, 1, KC_A)
-                    LAYER_MATRIX_KEY(0, 1, 2, KC_S)
-                    LAYER_MATRIX_KEY(0, 1, 3, KC_D)
-                    LAYER_MATRIX_KEY(0, 1, 4, KC_F)
-                    LAYER_MATRIX_KEY(0, 1, 5, KC_G)
+                    LAYER_MATRIX_KEY(0, 1, 2, KC_R)
+                    LAYER_MATRIX_KEY(0, 1, 3, KC_S)
+                    LAYER_MATRIX_KEY(0, 1, 4, KC_T)
+                    LAYER_MATRIX_KEY(0, 1, 5, KC_D)
                     LAYER_MATRIX_KEY(0, 5, 0, KC_H)
-                    LAYER_MATRIX_KEY(0, 5, 1, KC_J)
-                    LAYER_MATRIX_KEY(0, 5, 2, KC_K)
-                    LAYER_MATRIX_KEY(0, 5, 3, KC_L)
-                    LAYER_MATRIX_KEY(0, 5, 4, KC_SCLN)
+                    LAYER_MATRIX_KEY(0, 5, 1, KC_N)
+                    LAYER_MATRIX_KEY(0, 5, 2, KC_E)
+                    LAYER_MATRIX_KEY(0, 5, 3, KC_I)
+                    LAYER_MATRIX_KEY(0, 5, 4, KC_O)
                     LAYER_MATRIX_KEY(0, 5, 5, KC_QUOT)
 
                     LAYER_MATRIX_KEY(0, 2, 0, KC_LSFT)
@@ -74,7 +74,7 @@
                     LAYER_MATRIX_KEY(0, 2, 3, KC_C)
                     LAYER_MATRIX_KEY(0, 2, 4, KC_V)
                     LAYER_MATRIX_KEY(0, 2, 5, KC_B)
-                    LAYER_MATRIX_KEY(0, 6, 0, KC_N)
+                    LAYER_MATRIX_KEY(0, 6, 0, KC_K)
                     LAYER_MATRIX_KEY(0, 6, 1, KC_M)
                     LAYER_MATRIX_KEY(0, 6, 2, KC_COMM)
                     LAYER_MATRIX_KEY(0, 6, 3, KC_DOT)
@@ -183,7 +183,7 @@
                     LAYER_MATRIX_KEY(2, 2, 4, KC_V)
                     LAYER_MATRIX_KEY(2, 2, 5, KC_B)
                     LAYER_MATRIX_KEY(2, 6, 0, KC_N)
-                    LAYER_MATRIX_KEY(2, 6, 1, KC_M)
+                    LAYER_MATRIX_KEY(2, 6, 1, 0xFFF1)
                     LAYER_MATRIX_KEY(2, 6, 2, KC_COMM)
                     LAYER_MATRIX_KEY(2, 6, 3, KC_DOT)
                     LAYER_MATRIX_KEY(2, 6, 4, KC_SLSH)
@@ -205,26 +205,4 @@
             };
         };
     };
-
-    // fragment@1 {
-    //     target = <&usb>;
-    //     #address-cells = <1>;
-    //     #size-cells = <1>;
-    //     dwc2_usb: __overlay__ {
-    //         compatible = "brcm,bcm2835-usb", "brcm,bcm2708-usb", "brcm,bcm2709-usb";
-    //         reg = <0x7e980000 0x10000>;
-    //         interrupts = <1 9>;
-    //         dr_mode = "otg";
-    //         g-np-tx-fifo-size = <32>;
-    //         g-rx-fifo-size = <256>;
-    //         g-tx-fifo-size = <512 512 512 512 512 768>;
-    //         status = "okay";
-    //     };
-    // };
-
-    // __overrides__ {
-    //     dr_mode = <&dwc2_usb>, "dr_mode";
-    //     g-np-tx-fifo-size = <&dwc2_usb>,"g-np-tx-fifo-size:0";
-    //     g-rx-fifo-size = <&dwc2_usb>,"g-rx-fifo-size:0";
-    // };
 };  
