@@ -46,3 +46,10 @@ modules.order
 # Keyboard tmp files
 keyboards/*.tmp
 keyboards/*.dtbo
+
+# binaries
+helper/qmk_helper
+helper/qmk_listener
+lib/libqmk.a
+
+lib/libusbgx/build/

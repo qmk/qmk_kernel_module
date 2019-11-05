@@ -20,7 +20,7 @@ unload: keyboard-unload
 
 endif
 
-clean-all: qmk-clean keyboard-clean-all
+clean-all: qmk-clean keyboard-clean-all helper-clean
 load-all: qmk-load keyboard-load
 
 # QMK kernel module building
@@ -35,14 +35,27 @@ obj-m  := $(TARGET).o
 qmk-src := $(patsubst $(PWD)/%,%,$(shell find $(PWD)/module/ -type f -name '*.c'))
 qmk-objs := $(patsubst $(PWD)/%.c,%.o,$(shell find $(PWD)/module/ -type f -name '*.c')) lib/libqmk.a
 
-EXTRA_CFLAGS = -I$(PWD)/include -I$(PWD)/lib/libqmk/include -I/usr/include -I/usr/include/arm-linux-gnueabihf
-EXTRA_CFLAGS += -L lib -L /usr/lib -L /usr/lib/arm-linux-gnueabihf -l:libqmk.a -lusbgx
+EXTRA_CFLAGS = -I$(PWD)/include -I$(PWD)/lib/libqmk/include
+EXTRA_CFLAGS += -L lib -lqmk
 
 else
 
 PWD = $(shell pwd)
 
 include $(KDIR)/tools/scripts/Makefile.include
+
+# QMK helper building
+
+helper/qmk_helper:
+	$(call descend,helper)
+
+helper: helper/qmk_helper
+
+helper-clean:
+	$(call descend,helper,clean)
+
+helper-install:
+	$(call descend,helper,install)
 
 # QMK library building
 

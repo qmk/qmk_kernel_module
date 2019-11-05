@@ -20,7 +20,7 @@ $(TARGET): $(patsubst ./%.c,$(BUILD_DIR)/%.o,$(C_FILES))
 $(BUILD_DIR)/%.o: %.c $(BUILD_DIR)
 	@echo "  CC [M]  $@"
 	@mkdir -p $(BUILD_DIR)/$(*D)
-	$(CC) -c $(INC) $(CFLAGS) -o $@  $<
+	@$(CC) -c $(INC) $(CFLAGS) -o $@  $<
 
 $(BUILD_DIR):
 	@mkdir -p $@
