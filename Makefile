@@ -62,23 +62,23 @@ qmk-clean: libqmk-clean
 
 qmk-install: qmk-default
 	$(call descend,$(KDIR),M=$(PWD) modules_install)
-	depmod -a
+	@depmod -a
 
 qmk-remove:
 	@echo "* This will delete /lib/modules/`uname -r`/extra/${TARGET}.ko"
 	@read -r -p "   Are you sure? [y/N]: " CONTINUE; \
 	[ "$$CONTINUE" = "y" ] || [ "$$CONTINUE" = "Y" ] || (exit 1;)
-	sudo rm /lib/modules/`uname -r`/extra/${TARGET}.ko
+	@rm /lib/modules/`uname -r`/extra/${TARGET}.ko
 
 qmk-load: qmk-default
-	@sudo rmmod $(TARGET) 2>/dev/null; true
-	@sudo modprobe input-polldev
+	@rmmod $(TARGET) 2>/dev/null; true
+	@modprobe input-polldev
 	@echo "  LOAD $(TARGET).ko"
-	@sudo insmod ./$(TARGET).ko
+	@insmod ./$(TARGET).ko
 
 qmk-unload:
-	echo "  UNLOAD $(TARGET).ko"
-	sudo rmmod $(TARGET)
+	@echo "  UNLOAD $(TARGET).ko"
+	@rmmod $(TARGET)
 
 # Keyboard building
 
@@ -87,28 +87,28 @@ keyboard-default:
 	$(QUIET_GEN)dtc -W no-unit_address_vs_reg -I dts -O dtb -o keyboards/${KEYBOARD}.dtbo keyboards/${KEYBOARD}.tmp
 
 keyboard-install: keyboard-default
-	$(QUIET_INSTALL)sudo cp keyboards/${KEYBOARD}.dtbo /boot/overlays/${KEYBOARD}.dtbo
-	echo "  add \"dtoverlay=${KEYBOARD}\" to your /boot/config.txt"
+	$(QUIET_INSTALL)cp keyboards/${KEYBOARD}.dtbo /boot/overlays/${KEYBOARD}.dtbo
+	@echo "  add \"dtoverlay=${KEYBOARD}\" to your /boot/config.txt"
 
 keyboard-remove:
-	echo "* Removing /boot/overlays/${KEYBOARD}.dtbo"
-	sudo rm /boot/overlays/${KEYBOARD}.dtbo
+	@echo "* Removing /boot/overlays/${KEYBOARD}.dtbo"
+	@rm /boot/overlays/${KEYBOARD}.dtbo
 
 keyboard-clean:
-	echo "* Cleaning ${KEYBOARD} overlay"
-	rm keyboards/${KEYBOARD}.dtbo keyboards/${KEYBOARD}.tmp 2>/dev/null; true
+	@echo "* Cleaning ${KEYBOARD} overlay"
+	@rm keyboards/${KEYBOARD}.dtbo keyboards/${KEYBOARD}.tmp 2>/dev/null; true
 
 keyboard-clean-all:
-	echo "* Cleaning all overlays"
-	rm keyboards/*.dtbo keyboards/*.tmp 2>/dev/null; true
+	@echo "* Cleaning all overlays"
+	@rm keyboards/*.dtbo keyboards/*.tmp 2>/dev/null; true
 
 keyboard-load: keyboard-default
-	sudo dtoverlay -r ${KEYBOARD} 2>/dev/null; true
-	echo "* Loading ${KEYBOARD} overlay"
-	sudo dtoverlay keyboards/${KEYBOARD}.dtbo
+	@dtoverlay -r ${KEYBOARD} 2>/dev/null; true
+	@echo "* Loading ${KEYBOARD} overlay"
+	@dtoverlay keyboards/${KEYBOARD}.dtbo
 
 keyboard-unload:
-	echo "* Unloading ${KEYBOARD} overlay"
-	sudo dtoverlay -r ${KEYBOARD}
+	@echo "* Unloading ${KEYBOARD} overlay"
+	@dtoverlay -r ${KEYBOARD}
 
 endif

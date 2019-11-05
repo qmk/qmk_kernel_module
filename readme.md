@@ -19,12 +19,12 @@ You'll need the Raspberry Pi kernel headers installed, along with the basic tool
 
     sudo apt install raspberrypi-kernel-headers git bc bison flex libssl-dev evtest input-utils
 
-    make            # builds the kernel module
-    make load       # builds and loads the kernel module
-    make unload     # unloads the kernel module
-    make install    # builds and installs the kernel module
-    make remove     # removes the kernel module
-    make clean      # cleans up the build files
+    make                 # builds the kernel module
+    sudo make load       # builds and loads the kernel module
+    sudo make unload     # unloads the kernel module
+    sudo make install    # builds and installs the kernel module
+    sudo make remove     # removes the kernel module
+    make clean           # cleans up the build files
 
 ### Installing
 
@@ -57,12 +57,12 @@ The installation was based on [this guide](http://blog.gegg.us/2017/08/a-matrix-
 
 ### Building
 
-    make KEYBOARD=planck            # builds the "planck" overlay
-    make KEYBOARD=planck load       # builds and loads the overlay
-    make KEYBOARD=planck unload     # unloads the overlay
-    make KEYBOARD=planck install    # builds and installs the overlay
-    make KEYBOARD=planck remove     # removes the overlay
-    make KEYBOARD=planck clean      # cleans up the build files
+    make KEYBOARD=planck                 # builds the "planck" overlay
+    sudo make KEYBOARD=planck load       # builds and loads the overlay
+    sudo make KEYBOARD=planck unload     # unloads the overlay
+    sudo make KEYBOARD=planck install    # builds and installs the overlay
+    sudo make KEYBOARD=planck remove     # removes the overlay
+    make KEYBOARD=planck clean           # cleans up the build files
 
 ## Other info
 
