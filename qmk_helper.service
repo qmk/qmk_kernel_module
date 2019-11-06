@@ -1,0 +1,12 @@
+[Unit]
+Description=QMK Helper
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=./qmk_helper
+WorkingDirectory=/home/pi/qmk_kernel_module/helper
+
+[Install]
+WantedBy=multi-user.target

@@ -67,3 +67,14 @@ The installation was based on [this guide](http://blog.gegg.us/2017/08/a-matrix-
 ## Other info
 
 `sudo apt install xserver-xorg-input-libinput xserver-xorg-input-kbd` may be required to get things working in X (if you've installed the lite version of Raspbian).
+
+### `/boot/config.txt` additions
+
+    dtoverlay=dwc2
+    dtoverlay=planck
+
+### `/etc/modules` additions
+
+    libcomposite
+    input-polldev
+    qmk

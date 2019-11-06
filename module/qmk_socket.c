@@ -3,17 +3,34 @@
 #include <linux/netlink.h>
 #include <net/netlink.h>
 #include <net/net_namespace.h>
-
-/* Protocol family, consistent in both kernel prog and user prog. */
-#define MYPROTO NETLINK_USERSOCK
-/* Multicast group, consistent in both kernel prog and user prog. */
-#define MYGRP 1
+#include "qmk_socket.h"
 
 static struct sock *nl_sk = NULL;
 
 void nl_input(struct sk_buff *skb)
 {
+
+    struct nlmsghdr *nlh;
+    pid_t pid;
+    char *message = "\x01Hello from kernel unicast";
+    size_t message_size = strlen(message) + 1;
+
+    nlh = (struct nlmsghdr *) skb->data;
+    pid = nlh->nlmsg_pid; // pid of the sending process
+
     pr_info("data ready");
+
+    struct sk_buff *skb_out = nlmsg_new(message_size, GFP_KERNEL);
+    if (!skb_out) {
+        printk(KERN_ERR "Failed to allocate a new skb\n");
+        return;
+    }
+
+    nlh = nlmsg_put(skb_out, 0, 0, NLMSG_DONE, message_size, 0);
+    NETLINK_CB(skb_out).dst_group = 0;
+    strncpy(nlmsg_data(nlh), message, message_size);
+
+    int result = nlmsg_unicast(nl_sk, skb_out, pid);
 }
 
 int nl_bind(struct net *net, int group) {
@@ -37,7 +54,7 @@ void send_socket_message(char * msg)
     nlh = nlmsg_put(skb, 0, 1, NLMSG_DONE, msg_size + 1, 0);
     strcpy(nlmsg_data(nlh), msg);
 
-    res = nlmsg_multicast(nl_sk, skb, 0, MYGRP, GFP_KERNEL);
+    res = nlmsg_multicast(nl_sk, skb, 0, MYMGRP, GFP_KERNEL);
     if (res < 0 && res != -3)
         pr_info("nlmsg_multicast() error: %d\n", res);
 
@@ -57,8 +74,10 @@ int send_socket_message_f(const char *fmt, ...)
 }
 
 static struct netlink_kernel_cfg nl_cfg = {
-    .input = &nl_input,
-    .bind = &nl_bind
+    .input = nl_input,
+    .bind = nl_bind,
+    .flags = NL_CFG_F_NONROOT_RECV | NL_CFG_F_NONROOT_SEND,
+    .groups = MYMGRP,
 };
 
 int gadget_init(void)

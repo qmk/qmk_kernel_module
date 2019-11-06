@@ -4,6 +4,7 @@
 #include <linux/printk.h>
 #include "qmk_scancodes.h"
 #include "qmk.h"
+#include "qmk_socket.h"
 
 static bool usb_passthrough = false;
 

@@ -29,8 +29,6 @@
 #include <linux/types.h>
 #include <qmk/types.h>
 
-int hid_output, midi_output;
-
 static void qmk_start(struct input_polled_dev *poll_dev)
 {
 	// struct qmk_module *keyboard = poll_dev->private;
