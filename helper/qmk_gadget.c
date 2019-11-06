@@ -5,7 +5,6 @@
 #include <sys/stat.h> 
 #include <fcntl.h>
 #include <linux/usb/ch9.h>
-#include <usbg/usbg.h>
 #include <usbg/function/hid.h>
 #include <usbg/function/midi.h>
 #include "HIDReportData.h"
@@ -191,10 +190,10 @@ int gadget_open(char *name, struct qmk_gadget_cfg *cfg)
 		goto open_out1;
 	}
 
-    g_attrs.idVendor = cfg->vendor.id;
-    g_attrs.idProduct = cfg->product.id;
-    strcpy(g_strs.manufacturer, cfg->vendor.str);
-    strcpy(g_strs.product, cfg->product.str);
+    // g_attrs.idVendor = cfg->vendor.id;
+    // g_attrs.idProduct = cfg->product.id;
+    // strcpy(g_strs.manufacturer, cfg->vendor.str);
+    // strcpy(g_strs.product, cfg->product.str);
 
 	usbg_ret = usbg_create_gadget(s, name, &g_attrs, &g_strs, &g);
 	if (usbg_ret != USBG_SUCCESS) {

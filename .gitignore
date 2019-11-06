@@ -49,7 +49,7 @@ keyboards/*.dtbo
 
 # binaries
 helper/qmk_helper
-helper/qmk_listener
+helper/qmk_ghelper
 lib/libqmk.a
 
 lib/libusbgx/build/

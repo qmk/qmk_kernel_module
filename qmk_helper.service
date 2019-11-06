@@ -5,8 +5,7 @@ After=network.target
 [Service]
 Type=simple
 Restart=always
-ExecStart=./qmk_helper
-WorkingDirectory=/home/pi/qmk_kernel_module/helper
+ExecStart=/home/pi/qmk_kernel_module/helper/qmk_helper -d
 
 [Install]
 WantedBy=multi-user.target

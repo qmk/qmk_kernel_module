@@ -9,6 +9,7 @@ static struct sock *nl_sk = NULL;
 
 void nl_input(struct sk_buff *skb)
 {
+    pr_info("data ready");
 
     struct nlmsghdr *nlh;
     pid_t pid;
@@ -17,8 +18,6 @@ void nl_input(struct sk_buff *skb)
 
     nlh = (struct nlmsghdr *) skb->data;
     pid = nlh->nlmsg_pid; // pid of the sending process
-
-    pr_info("data ready");
 
     struct sk_buff *skb_out = nlmsg_new(message_size, GFP_KERNEL);
     if (!skb_out) {
@@ -74,8 +73,8 @@ int send_socket_message_f(const char *fmt, ...)
 }
 
 static struct netlink_kernel_cfg nl_cfg = {
-    .input = nl_input,
-    .bind = nl_bind,
+    .input = &nl_input,
+    .bind = &nl_bind,
     .flags = NL_CFG_F_NONROOT_RECV | NL_CFG_F_NONROOT_SEND,
     .groups = MYMGRP,
 };

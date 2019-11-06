@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdlib.h>
+#include <usbg/usbg.h>
 
 struct cfg_attr {
     char *str;

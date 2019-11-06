@@ -6,6 +6,8 @@
 #include <sys/socket.h>
 #include <linux/netlink.h>
 #include <unistd.h>
+// #include <ncurses.h>
+#include <X11/Xlib.h>
 
 #include <qmk/keycodes/strings.h>
 #include "qmk_gadget.h"
@@ -48,29 +50,52 @@ void send_test()
 	gadget_write(buf);
 }
 
-void handle_message(char * msg) {
+void handle_message(char *msg)
+{
     int i;
 
     if (msg[0] == HANDSHAKE) {
         msg++;
         printf("\033[0;33m%s\033[0m\n", msg);
-    }
-    if (msg[0] == MSG_GENERIC) {
+    } else if (msg[0] == MSG_GENERIC) {
         msg++;
         printf("\033[0;33m%s\033[0m\n", msg);
-    }
-    if (msg[0] == KEYCODE_HID) {
+    } else if (msg[0] == KEYCODE_HID) {
         msg++;
         uint8_t ch = (uint8_t)msg[0];
         bool pressed = (bool)msg[1];
 
         if (pressed) {
-            printf("\033[0;32mHID keycode pressed:  (0x%.2X) %s\033[0m\n",
+            printf("\033[1;32mHID keycode pressed:  (0x%.2X) %s\033[0m\n",
                    ch, keycode_to_string[ch]);
         } else {
-            printf("\033[0;34mHID keycode released: (0x%.2X) %s\033[0m\n",
+            printf("\033[0;32mHID keycode released: (0x%.2X) %s\033[0m\n",
                    ch, keycode_to_string[ch]);
         }
+    } else if (msg[0] == MATRIX_EVENT) {
+        msg++;
+        uint8_t row = (uint8_t)msg[0] - 1;
+        uint8_t col = (uint8_t)msg[1] - 1;
+        bool pressed = (bool)msg[2];
+
+        if (pressed) {
+            printf("\033[1;34mMatrix event down:    (%d, %d)\033[0m\n",
+                   row, col);
+        } else {
+            printf("\033[0;34mMatrix event up:      (%d, %d)\033[0m\n",
+                   row, col);
+        }
+    }
+}
+
+void handle_daemon_message(char *msg)
+{
+    int i;
+
+    if (msg[0] == KEYCODE_HID) {
+        msg++;
+        uint8_t ch = (uint8_t)msg[0];
+        bool pressed = (bool)msg[1];
 
         keys_down[ch] = pressed;
 
@@ -97,51 +122,71 @@ void handle_message(char * msg) {
 }
 
 struct qmk_gadget_cfg cfg = {
-    .vendor = {
-        .id = 0x0838,
-        .str = "OLKB",
-    },
-    .product = {
-        .id = 0x0737,
-        .str = "PlanckenPi",
-    },
+	.vendor =
+		{
+			.id = 0x0838,
+			.str = "OLKB",
+		},
+	.product =
+		{
+			.id = 0x0737,
+			.str = "PlanckenPi",
+		},
 };
+
+static void __attribute__((noreturn)) usage(char * name)
+{
+    fprintf(stderr, "Usage: %s [-hdoct]\n", name);
+    exit(EXIT_FAILURE);
+}
 
 int main(int argc, char *argv[])
 {
-	int ret = -EINVAL;
-	int nls;
-
-	if (argc == 2) {
-        if (strcmp(argv[1], "test") == 0) {
-    		send_test();
-    		return ret;
-        }
-
-    	if (strcmp(argv[1], "open") == 0) {
-            gadget_open("g1", &cfg);
-        }
-
-        if (strcmp(argv[1], "close") == 0) {
-            gadget_close("g1");
-    	}
-    }
-
-	nls = open_netlink();
-	if (nls < 0) {
-		return nls;
-	}
-
-    send_message(nls, "hi!");
-
+	int nls, c;
 	signal(SIGINT, interrupt_signal);
 
-	printf("Bound, listening.\n");
-	while (sig_flag) {
-		read_message(nls, handle_message);
+	while ((c = getopt(argc, argv, "hdoct:")) != EOF) {
+		switch (c) {
+		case 'h':
+			usage(argv[0]);
+			break;
+		case 'd':
+			gadget_open("g1", &cfg);
+
+			nls = open_netlink();
+			while (sig_flag) {
+				read_message(nls, handle_daemon_message);
+			}
+			close(nls);
+            exit(EXIT_SUCCESS);
+			break;
+		case 'o':
+			exit(gadget_open("g1", &cfg));
+			break;
+		case 'c':
+			exit(gadget_close("g1"));
+			break;
+		case 't':
+			send_test();
+            exit(EXIT_SUCCESS);
+			break;
+		default:
+            usage(argv[0]);
+            break;
+		}
 	}
 
-	close(nls);
+    // initscr();
+    // cbreak();
+    // noecho();
+    nls = open_netlink();
+    send_message(nls, "hi!");
+    while (sig_flag) {
+        read_message(nls, handle_message);
+        // refresh();
+    }
+    close(nls);
+    // endwin();
 
-	return 0;
+	return EXIT_SUCCESS;
 }

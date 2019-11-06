@@ -7,6 +7,7 @@
 #include <qmk/keycodes/process.h>
 #include <qmk/protocol.h>
 #include <qmk/types.h>
+#include "qmk_socket.h"
 
 int qmk_init_gpio(struct platform_device *pdev, struct qmk_module *module)
 {
@@ -148,6 +149,7 @@ void qmk_analyze_state(struct qmk_module *module)
 					event->row = row;
 					event->col = col;
 					event->pressed = pressed;
+					send_socket_message_f("%c%c%c%c", MATRIX_EVENT, (char)(row+1), (char)(col+1), (char)pressed);
 					handled =
 						process_keycode(keyboard, event,
 								&keycode) ||
@@ -173,4 +175,6 @@ void qmk_analyze_state(struct qmk_module *module)
 
 	memcpy(module->last_key_state, module->current_key_state,
 	       sizeof(module->current_key_state));
+
+	devm_kfree(&input->dev, event);
 }
