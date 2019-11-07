@@ -143,7 +143,8 @@ void handle_daemon_message(char *msg)
 		for (x = 3; (x < 16); x++) {
 			buf[x] = key_list[x - 3]; // keycodes
 		}
-        printf("%.16X", buf);
+        // don't print this out unles you're debugging - it'll be logged
+        // printf("%.16X\n", buf);
 		gadget_write(buf);
 	}
 }

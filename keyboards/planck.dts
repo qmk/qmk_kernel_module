@@ -131,8 +131,8 @@
                     LAYER_MATRIX_KEY(1, 6, 0, KC_N)
                     LAYER_MATRIX_KEY(1, 6, 1, KC_M)
                     LAYER_MATRIX_KEY(1, 6, 2, KC_COMMA)
-                    LAYER_MATRIX_KEY(1, 6, 3, KC_DOT)
-                    LAYER_MATRIX_KEY(1, 6, 4, KC_SLSH)
+                    LAYER_MATRIX_KEY(1, 6, 3, KC_HOME)
+                    LAYER_MATRIX_KEY(1, 6, 4, KC_END)
                     LAYER_MATRIX_KEY(1, 6, 5, KC_ENT)
 
                     LAYER_MATRIX_KEY(1, 3, 0, KC_RSFT)
@@ -185,8 +185,8 @@
                     LAYER_MATRIX_KEY(2, 6, 0, KC_N)
                     LAYER_MATRIX_KEY(2, 6, 1, 0xFFF1)
                     LAYER_MATRIX_KEY(2, 6, 2, KC_COMM)
-                    LAYER_MATRIX_KEY(2, 6, 3, KC_DOT)
-                    LAYER_MATRIX_KEY(2, 6, 4, KC_SLSH)
+                    LAYER_MATRIX_KEY(2, 6, 3, KC_PGUP)
+                    LAYER_MATRIX_KEY(2, 6, 4, KC_PGDN)
                     LAYER_MATRIX_KEY(2, 6, 5, KC_ENT)
 
                     LAYER_MATRIX_KEY(2, 3, 0, KC_RSFT)
@@ -197,10 +197,10 @@
                     LAYER_MATRIX_KEY(2, 7, 5, KC_SPACE)
                     LAYER_MATRIX_KEY(2, 7, 0, KC_SPACE) // space
                     LAYER_MATRIX_KEY(2, 7, 1, MO(2))
-                    LAYER_MATRIX_KEY(2, 7, 2, KC_LEFT)
-                    LAYER_MATRIX_KEY(2, 3, 3, KC_DOWN)
-                    LAYER_MATRIX_KEY(2, 3, 4, KC_UP)
-                    LAYER_MATRIX_KEY(2, 3, 5, KC_RIGHT)
+                    LAYER_MATRIX_KEY(2, 7, 2, KC_MNXT)
+                    LAYER_MATRIX_KEY(2, 3, 3, KC_VOLD)
+                    LAYER_MATRIX_KEY(2, 3, 4, KC_VOLU)
+                    LAYER_MATRIX_KEY(2, 3, 5, KC_MPLY)
                 >;
             };
         };
