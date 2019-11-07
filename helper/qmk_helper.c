@@ -7,7 +7,6 @@
 #include <linux/netlink.h>
 #include <unistd.h>
 // #include <ncurses.h>
-#include <X11/Xlib.h>
 
 #include <qmk/keycodes/strings.h>
 #include "qmk_gadget.h"

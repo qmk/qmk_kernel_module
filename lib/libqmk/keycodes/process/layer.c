@@ -2,6 +2,28 @@
 #include <qmk/protocol.h>
 #include <qmk/keycodes/quantum.h>
 
+void update_active_layer(struct qmk_keyboard *keyboard) {
+	int i;
+	uint8_t layer = 0;
+	for (i = keyboard->layers - 1; i >= 0; i--) {
+		if ((keyboard->layer_state >> i) & 1) {
+			layer = i;
+			break;
+		}
+	}
+	keyboard->active_layer = layer;
+}
+
+void layer_and_equal(struct qmk_keyboard *keyboard, uint16_t value) {
+	keyboard->layer_state &= value;
+	update_active_layer(keyboard);
+}
+
+void layer_or_equal(struct qmk_keyboard *keyboard, uint16_t value) {
+	keyboard->layer_state |= value;
+	update_active_layer(keyboard);
+}
+
 bool process_layer(struct qmk_keyboard *keyboard, qmk_keycode_t *keycode,
 		   bool pressed)
 {
@@ -15,9 +37,9 @@ bool process_layer(struct qmk_keyboard *keyboard, qmk_keycode_t *keycode,
 		basic_keycode = *keycode & 0xFF;
 		if (pressed) {
 			timer = protocol.timer_init();
-			(keyboard->layer_state) |= (1UL << layer);
+			layer_or_equal(keyboard, (1UL << layer));
 		} else {
-			(keyboard->layer_state) &= ~(1UL << layer);
+			layer_and_equal(keyboard, ~(1UL << layer));
 			if (timer) {
 				uint16_t time_elapsed =
 					protocol.timer_elapsed(timer);
@@ -40,9 +62,9 @@ bool process_layer(struct qmk_keyboard *keyboard, qmk_keycode_t *keycode,
 		// Momentary action_layer
 		layer = *keycode & 0xFF;
 		if (pressed)
-			(keyboard->layer_state) |= (1UL << layer);
+			layer_or_equal(keyboard, (1UL << layer));
 		else
-			(keyboard->layer_state) &= ~(1UL << layer);
+			layer_and_equal(keyboard, ~(1UL << layer));
 		return true;
 		break;
 	default:

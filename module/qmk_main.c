@@ -261,6 +261,7 @@ static int qmk_probe(struct platform_device *pdev)
 	poll_dev->close = qmk_stop;
 
 	keyboard->keymap = input->keycode;
+	keyboard->layer_state = 1;
 
 	if (!pdata->no_autorepeat)
 		__set_bit(EV_REP, input->evbit);

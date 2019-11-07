@@ -26,7 +26,8 @@ void send_keycode(struct qmk_keyboard *keyboard, hid_keycode_t keycode,
 	struct input_dev *input = module->input_dev;
 
 	if (usb_passthrough) {
-		send_socket_message_f("%c%c%c", KEYCODE_HID, keycode, (char)pressed);
+		// send_socket_message_f("%c%c%c", KEYCODE_HID, keycode, (uint8_t)pressed);
+		send_socket_message((uint8_t[]){ KEYCODE_HID, keycode, pressed }, 3);
 	} else {
 		scancode = keycode_to_scancode[keycode];
 		input_report_key(input, scancode, pressed);
@@ -42,12 +43,13 @@ bool process_qkm(struct qmk_keyboard *keyboard, qmk_keycode_t *keycode,
 			if (usb_passthrough) {
 				printk("Disabling USB Passthrough");
 				usb_passthrough = false;
-				send_socket_message_f("%c%s", MSG_GENERIC, "USB Passthrough Disabled");
+				// send_socket_message_f("%c%s", MSG_GENERIC, "USB Passthrough Disabled");
 			} else {
 				printk("Enabling USB Passthrough");
-				send_socket_message_f("%c%s", MSG_GENERIC, "USB Passthrough Enabled");
+				// send_socket_message_f("%c%s", MSG_GENERIC, "USB Passthrough Enabled");
 				usb_passthrough = true;
 			}
+			send_socket_message((uint8_t[]){ USB_PASSTHROUGH, usb_passthrough }, 2);
 		}
 		return true;
 	}

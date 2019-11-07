@@ -33,6 +33,7 @@ struct qmk_keyboard {
 	uint8_t cols;
 	qmk_keycode_t *keymap;
 	uint16_t layer_state;
+	uint8_t active_layer;
 	uint16_t mod_tap_timeout;
 	uint8_t encoder_ab_count;
 	uint8_t encoder_c_count;

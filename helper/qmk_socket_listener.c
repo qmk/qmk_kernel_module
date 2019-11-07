@@ -63,7 +63,7 @@ void read_message(int sock, void (*callback)())
     struct sockaddr_nl nladdr;
     struct msghdr msg;
     struct iovec iov;
-    char buffer[65536];
+    u_int8_t buffer[65536];
     int ret, i;
 
     iov.iov_base = (void *)buffer;
@@ -76,7 +76,7 @@ void read_message(int sock, void (*callback)())
 
     ret = recvmsg(sock, &msg, 0);
     if (ret >= 0) {
-        char *input = NLMSG_DATA((struct nlmsghdr *)&buffer);
+        int8_t *input = NLMSG_DATA((struct nlmsghdr *)&buffer);
         callback(input);
     }
 }

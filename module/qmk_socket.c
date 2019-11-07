@@ -37,11 +37,12 @@ int nl_bind(struct net *net, int group) {
     return 0;
 }
 
-void send_socket_message(char * msg)
+void send_socket_message(uint8_t * msg, uint8_t msg_size)
 {
     struct sk_buff *skb;
     struct nlmsghdr *nlh;
-    int msg_size = strlen(msg) + 1;
+    // int msg_size = strlen(msg) + 1;
+
     int res;
 
     skb = nlmsg_new(NLMSG_ALIGN(msg_size + 1), GFP_KERNEL);
@@ -51,7 +52,8 @@ void send_socket_message(char * msg)
     }
 
     nlh = nlmsg_put(skb, 0, 1, NLMSG_DONE, msg_size + 1, 0);
-    strcpy(nlmsg_data(nlh), msg);
+    // strcpy(nlmsg_data(nlh), msg);
+    memcpy(nlmsg_data(nlh), msg, msg_size);
 
     res = nlmsg_multicast(nl_sk, skb, 0, MYMGRP, GFP_KERNEL);
     if (res < 0 && res != -3)
@@ -67,7 +69,7 @@ int send_socket_message_f(const char *fmt, ...)
 
     va_start(args, fmt);
     i=vsprintf(buf,fmt,args);
-    send_socket_message(buf);
+    send_socket_message(buf, strlen(buf) + 1);
     va_end(args);
     return i;
 }

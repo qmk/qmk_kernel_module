@@ -53,8 +53,9 @@ bool process_keycode(struct qmk_keyboard *keyboard, struct qmk_matrix_event *me,
 			break;
 		}
 	}
+	keyboard->active_layer = layer;
 
-	*keycode = keycode_from_keymap(keyboard, layer, me->row, me->col);
+	*keycode = keycode_from_keymap(keyboard, keyboard->active_layer, me->row, me->col);
 
 	return process_layer(keyboard, keycode, me->pressed) ||
 	       process_mods(keyboard, keycode, me->pressed) ||

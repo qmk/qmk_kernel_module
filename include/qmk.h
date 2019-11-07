@@ -118,7 +118,7 @@ struct qmk_module {
 };
 
 int send_socket_message_f(const char *fmt, ...);
-void send_socket_message(char * msg);
+void send_socket_message(uint8_t * msg, uint8_t msg_size);
 int gadget_init(void);
 void gadget_exit(void);
 
