@@ -53,8 +53,8 @@
                     LAYER_MATRIX_KEY(0, 5, 2, KC_0)
                     LAYER_MATRIX_KEY(0, 5, 3, KC_MINUS)
                     LAYER_MATRIX_KEY(0, 5, 4, KC_EQUAL)
+                    LAYER_MATRIX_KEY(0, 5, 5, KC_BSPC)
 
-                    LAYER_MATRIX_KEY(0, 5, 6, KC_BSPC)
                     LAYER_MATRIX_KEY(0, 5, 7, KC_PGUP)
 
                     LAYER_MATRIX_KEY(0, 1, 7, KC_TAB)
@@ -70,8 +70,8 @@
                     LAYER_MATRIX_KEY(0, 6, 2, KC_P)
                     LAYER_MATRIX_KEY(0, 6, 3, KC_LBRC)
                     LAYER_MATRIX_KEY(0, 6, 4, KC_RBRC)
+                    LAYER_MATRIX_KEY(0, 6, 5, KC_BSLS)
 
-                    LAYER_MATRIX_KEY(0, 6, 6, KC_BSLS)
                     LAYER_MATRIX_KEY(0, 6, 7, KC_BSPC)
 
                     LAYER_MATRIX_KEY(0, 2, 7, KC_ESC)
@@ -89,18 +89,18 @@
                     LAYER_MATRIX_KEY(0, 7, 4, KC_ENTER)
 
                     LAYER_MATRIX_KEY(0, 3, 7, KC_LSFT)
-                    LAYER_MATRIX_KEY(0, 3, 6, KC_Z)
-                    LAYER_MATRIX_KEY(0, 3, 5, KC_X)
-                    LAYER_MATRIX_KEY(0, 3, 4, KC_C)
-                    LAYER_MATRIX_KEY(0, 3, 3, KC_V)
-                    LAYER_MATRIX_KEY(0, 3, 2, KC_B)
-                    LAYER_MATRIX_KEY(0, 3, 1, KC_N)
-                    LAYER_MATRIX_KEY(0, 3, 0, KC_M)
-                    LAYER_MATRIX_KEY(0, 8, 0, KC_COMM)
-                    LAYER_MATRIX_KEY(0, 8, 1, KC_DOT)
-                    LAYER_MATRIX_KEY(0, 8, 2, KC_SLSH)
-                    LAYER_MATRIX_KEY(0, 8, 3, KC_RSFT)
-                    LAYER_MATRIX_KEY(0, 8, 5, KC_UP)
+                    LAYER_MATRIX_KEY(0, 3, 5, KC_Z)
+                    LAYER_MATRIX_KEY(0, 3, 4, KC_X)
+                    LAYER_MATRIX_KEY(0, 3, 3, KC_C)
+                    LAYER_MATRIX_KEY(0, 3, 2, KC_V)
+                    LAYER_MATRIX_KEY(0, 3, 1, KC_B)
+                    LAYER_MATRIX_KEY(0, 3, 0, KC_N)
+                    LAYER_MATRIX_KEY(0, 8, 0, KC_M)
+                    LAYER_MATRIX_KEY(0, 8, 1, KC_COMM)
+                    LAYER_MATRIX_KEY(0, 8, 2, KC_DOT)
+                    LAYER_MATRIX_KEY(0, 8, 3, KC_SLSH)
+                    LAYER_MATRIX_KEY(0, 8, 4, KC_RSFT)
+                    LAYER_MATRIX_KEY(0, 8, 6, KC_UP)
 
                     LAYER_MATRIX_KEY(0, 4, 7, KC_LCTL)
                     LAYER_MATRIX_KEY(0, 4, 6, KC_LALT)
@@ -109,8 +109,8 @@
                     LAYER_MATRIX_KEY(0, 9, 2, KC_RGUI)
                     LAYER_MATRIX_KEY(0, 9, 3, KC_RCTL)
                     LAYER_MATRIX_KEY(0, 9, 4, MO(1))
-                    LAYER_MATRIX_KEY(0, 9, 6, KC_LEFT)
-                    LAYER_MATRIX_KEY(0, 9, 5, KC_DOWN)
+                    LAYER_MATRIX_KEY(0, 9, 5, KC_LEFT)
+                    LAYER_MATRIX_KEY(0, 9, 6, KC_DOWN)
                     LAYER_MATRIX_KEY(0, 9, 7, KC_RIGHT)
                 >;
             };
