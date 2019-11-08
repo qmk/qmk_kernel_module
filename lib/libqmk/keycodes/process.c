@@ -36,6 +36,7 @@ bool process_keycode(struct qmk_keyboard *keyboard, struct qmk_matrix_event *me,
 	int i;
 	uint8_t layer = 0;
 	*keycode = KC_NO;
+	static uint8_t layer_when_pressed[16][16] = { 0 };
 
 	// protocol.printf("matrix event at (%d, %d, %s)\n", me->row, me->col,
 	// 		(me->pressed ? "down" : "up"));
@@ -53,9 +54,16 @@ bool process_keycode(struct qmk_keyboard *keyboard, struct qmk_matrix_event *me,
 			break;
 		}
 	}
+
 	keyboard->active_layer = layer;
 
-	*keycode = keycode_from_keymap(keyboard, keyboard->active_layer, me->row, me->col);
+	// send key release to the layer it was pressed on
+	if (me->pressed)
+		layer_when_pressed[me->row][me->col] = layer;
+	else
+		layer = layer_when_pressed[me->row][me->col];
+
+	*keycode = keycode_from_keymap(keyboard, layer, me->row, me->col);
 
 	return process_layer(keyboard, keycode, me->pressed) ||
 	       process_mods(keyboard, keycode, me->pressed) ||

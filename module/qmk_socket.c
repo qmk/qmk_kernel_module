@@ -45,23 +45,25 @@ void send_socket_message(void)
     struct nlmsghdr *nlh;
     int res;
 
-    socket_message[0] = socket_message_size;
+    if (socket_message_size > 1) {
+        socket_message[0] = socket_message_size;
 
-    skb = nlmsg_new(NLMSG_ALIGN(socket_message_size + 1), GFP_KERNEL);
-    if (!skb) {
-        pr_err("Allocation failure.\n");
-        return;
+        skb = nlmsg_new(NLMSG_ALIGN(socket_message_size + 1), GFP_KERNEL);
+        if (!skb) {
+            pr_err("Allocation failure.\n");
+            return;
+        }
+
+        nlh = nlmsg_put(skb, 0, 1, NLMSG_DONE, socket_message_size + 1, 0);
+        // strcpy(nlmsg_data(nlh), msg);
+        memcpy(nlmsg_data(nlh), socket_message, socket_message_size);
+
+        res = nlmsg_multicast(nl_sk, skb, 0, MYMGRP, GFP_KERNEL);
+        if (res < 0 && res != -3)
+            pr_info("nlmsg_multicast() error: %d\n", res);
+
+        socket_message_size = 1;
     }
-
-    nlh = nlmsg_put(skb, 0, 1, NLMSG_DONE, socket_message_size + 1, 0);
-    // strcpy(nlmsg_data(nlh), msg);
-    memcpy(nlmsg_data(nlh), socket_message, socket_message_size);
-
-    res = nlmsg_multicast(nl_sk, skb, 0, MYMGRP, GFP_KERNEL);
-    if (res < 0 && res != -3)
-        pr_info("nlmsg_multicast() error: %d\n", res);
-
-    socket_message_size = 1;
 
 }
 

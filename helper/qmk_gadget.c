@@ -24,7 +24,7 @@ static char report_desc[] = {
 	HID_RI_USAGE(8, 0x06), // Keyboard
 	HID_RI_COLLECTION(8, 0x01), // Application
 
-	HID_RI_REPORT_ID(8, 0x01), // REPORT_ID (1)
+	HID_RI_REPORT_ID(8, REPORT_ID_KEYBOARD), // REPORT_ID (1)
 
 	// Modifiers (8 bits)
 
@@ -43,7 +43,7 @@ static char report_desc[] = {
 	HID_RI_REPORT_SIZE(8, 0x08),
 	HID_RI_INPUT(8, HID_IOF_CONSTANT),
 
-	// Keycodes (6 bytes)
+	// Keycodes (6 bytes) or 13?
 
 	HID_RI_USAGE_PAGE(8, 0x07), // Keyboard/Keypad
 	HID_RI_USAGE_MINIMUM(8, 0x00),
@@ -77,11 +77,11 @@ static char report_desc[] = {
 	HID_RI_USAGE_PAGE(8, 0x01), // Generic Desktop
 	HID_RI_USAGE(8, 0x80), // System Control
 	HID_RI_COLLECTION(8, 0x01), // Application
-	HID_RI_REPORT_ID(8, 0x03),
+	HID_RI_REPORT_ID(8, REPORT_ID_SYSTEM),
 	HID_RI_USAGE_MINIMUM(16, 0x0081), // System Power Down
 	HID_RI_USAGE_MAXIMUM(16, 0x0083), // System Wake Up
-	HID_RI_LOGICAL_MINIMUM(16, 0x0001),
-	HID_RI_LOGICAL_MAXIMUM(16, 0x0003),
+	HID_RI_LOGICAL_MINIMUM(16, 0x0081),
+	HID_RI_LOGICAL_MAXIMUM(16, 0x0083),
 	HID_RI_REPORT_COUNT(8, 1),
 	HID_RI_REPORT_SIZE(8, 16),
 	HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_ARRAY | HID_IOF_ABSOLUTE),
@@ -90,7 +90,7 @@ static char report_desc[] = {
 	HID_RI_USAGE_PAGE(8, 0x0C), // Consumer
 	HID_RI_USAGE(8, 0x01), // Consumer Control
 	HID_RI_COLLECTION(8, 0x01), // Application
-	HID_RI_REPORT_ID(8, 0x04),
+	HID_RI_REPORT_ID(8, REPORT_ID_CONSUMER),
 	HID_RI_USAGE_MINIMUM(16, 0x0001), // Consumer Control
 	HID_RI_USAGE_MAXIMUM(16, 0x029C), // AC Distribute Vertically
 	HID_RI_LOGICAL_MINIMUM(16, 0x0001),
@@ -99,6 +99,22 @@ static char report_desc[] = {
 	HID_RI_REPORT_SIZE(8, 16),
 	HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_ARRAY | HID_IOF_ABSOLUTE),
 	HID_RI_END_COLLECTION(0),
+
+	// Unicode
+
+	// HID_RI_USAGE_PAGE(8, 0x10), // Generic Desktop
+	// // HID_RI_USAGE(8, 0x10), // Unicode
+	// HID_RI_COLLECTION(8, 0x01), // Application
+	// HID_RI_REPORT_ID(8, 0x05), // REPORT_ID (5)
+	// HID_RI_USAGE_MINIMUM(16, 0x0000),
+	// HID_RI_USAGE_MAXIMUM(16, 0xFFFF),
+	// HID_RI_LOGICAL_MINIMUM(16, 0x0000),
+	// HID_RI_LOGICAL_MAXIMUM(16, 0xFFFF),
+	// HID_RI_REPORT_COUNT(8, 16),
+	// HID_RI_REPORT_SIZE(8, 16),
+	// HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_ARRAY | HID_IOF_ABSOLUTE),
+	// HID_RI_END_COLLECTION(0),
+
 };
 
 struct usbg_gadget_attrs g_attrs = {
@@ -107,8 +123,8 @@ struct usbg_gadget_attrs g_attrs = {
 	.bDeviceSubClass = 0x00,
 	.bDeviceProtocol = 0x00,
 	.bMaxPacketSize0 = 64, /* Max allowed ep0 packet size */
-	.idVendor = 0x1d6b,
-	.idProduct = 0x0104,
+	.idVendor = 0x03A8,
+	.idProduct = 0x0068,
 	.bcdDevice = 0x0001, /* Verson of device */
 };
 
@@ -137,7 +153,14 @@ struct usbg_f_hid_attrs f_attrs = {
 	.subclass = 0,
 };
 
-int gadget_write(unsigned char *buf) {
+int gadget_write_u8(uint8_t *buf) {
+    hid_output = open("/dev/hidg0", O_WRONLY | O_NDELAY);
+    write(hid_output, buf, HID_REPORT_SIZE);
+    close(hid_output);
+}
+
+int gadget_write_u16(uint16_t *buf) {
+	// uint8_t *buf_u8
     hid_output = open("/dev/hidg0", O_WRONLY | O_NDELAY);
     write(hid_output, buf, HID_REPORT_SIZE);
     close(hid_output);
