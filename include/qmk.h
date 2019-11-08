@@ -117,8 +117,10 @@ struct qmk_module {
 	bool gpio_all_disabled;
 };
 
-int send_socket_message_f(const char *fmt, ...);
-void send_socket_message(uint8_t * msg, uint8_t msg_size);
+int queue_socket_message_f(const char *fmt, ...);
+void queue_socket_message(uint8_t * msg, uint8_t msg_size);
+void send_socket_message(void);
+
 int gadget_init(void);
 void gadget_exit(void);
 

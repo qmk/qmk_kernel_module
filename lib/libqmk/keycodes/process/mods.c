@@ -8,6 +8,8 @@ bool process_mods(struct qmk_keyboard *keyboard, qmk_keycode_t *keycode,
 {
 	switch (*keycode) {
 	case QK_MODS ... QK_MODS_MAX:
+		if (!pressed)
+			protocol.send_keycode(keyboard, *keycode & 0xFF, pressed);
 		if (*keycode & QK_RMODS_MIN) {
 			if (*keycode & QK_RCTL)
 				protocol.send_keycode(keyboard, KC_RCTRL,
@@ -35,8 +37,8 @@ bool process_mods(struct qmk_keyboard *keyboard, qmk_keycode_t *keycode,
 				protocol.send_keycode(keyboard, KC_LGUI,
 						      pressed);
 		}
-		*keycode = *keycode & 0xFF;
-		protocol.send_keycode(keyboard, *keycode, pressed);
+		if (pressed)
+			protocol.send_keycode(keyboard, *keycode & 0xFF, pressed);
 		return true;
 		break;
 	default:

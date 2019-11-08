@@ -6,6 +6,8 @@ After=network.target
 Type=simple
 Restart=always
 ExecStart=/home/pi/qmk_kernel_module/helper/qmk_helper -d
+CPUWeight=20
+IOWeight=20
 
 [Install]
 WantedBy=multi-user.target

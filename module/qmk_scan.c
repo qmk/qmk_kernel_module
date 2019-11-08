@@ -152,7 +152,7 @@ void qmk_analyze_state(struct qmk_module *module)
 					event->row = row;
 					event->col = col;
 					event->pressed = pressed;
-					send_socket_message((uint8_t[]){ MATRIX_EVENT, row, col, pressed }, 4);
+					queue_socket_message((uint8_t[]){ MATRIX_EVENT, row, col, pressed }, 4);
 					handled =
 						process_keycode(keyboard, event,
 								&keycode) ||
@@ -172,9 +172,11 @@ void qmk_analyze_state(struct qmk_module *module)
 	input_sync(input);
 
 	if (starting_layer != keyboard->active_layer)
-		send_socket_message((uint8_t[]){ ACTIVE_LAYER, keyboard->active_layer }, 2);
+		queue_socket_message((uint8_t[]){ ACTIVE_LAYER, keyboard->active_layer }, 2);
 	if (starting_state != keyboard->layer_state)
-		send_socket_message((uint8_t[]){ LAYER_STATE, ((keyboard->layer_state >> 8) & 0xFF), (keyboard->layer_state & 0xFF) }, 3);
+		queue_socket_message((uint8_t[]){ LAYER_STATE, ((keyboard->layer_state >> 8) & 0xFF), (keyboard->layer_state & 0xFF) }, 3);
+
+	send_socket_message();
 
 	memcpy(module->last_key_state, module->current_key_state,
 	       sizeof(module->current_key_state));

@@ -11,6 +11,22 @@
 
 #define MAX_PAYLOAD 1024
 
+int open_unblocked_netlink(void)
+{
+    int sock, status;
+    
+    sock = open_netlink();
+
+    status = fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK);
+
+    if (status == -1) {
+        perror("calling fcntl");
+        // handle the error.  By the way, I've never seen fcntl fail in this way
+    }
+
+    return sock;
+}
+
 int open_netlink(void)
 {
     int sock, status;
@@ -46,13 +62,6 @@ int open_netlink(void)
     if (status < 0) {
         printf("setsockopt: %d\n", status);
         return status;
-    }
-
-    status = fcntl(sock, F_SETFL, fcntl(sock, F_GETFL, 0) | O_NONBLOCK);
-
-    if (status == -1) {
-        perror("calling fcntl");
-        // handle the error.  By the way, I've never seen fcntl fail in this way
     }
 
     return sock;

@@ -51,7 +51,7 @@ void send_test()
 	gadget_write(buf);
 }
 
-void handle_message(char *msg)
+void handle_message(uint8_t *msg)
 {
 	int i;
 
@@ -75,8 +75,8 @@ void handle_message(char *msg)
 		}
 	} else if (msg[0] == MATRIX_EVENT) {
 		msg++;
-		uint8_t row = (uint8_t)msg[0] - 1;
-		uint8_t col = (uint8_t)msg[1] - 1;
+		uint8_t row = (uint8_t)msg[0];
+		uint8_t col = (uint8_t)msg[1];
 		bool pressed = (bool)msg[2];
 
 		if (pressed) {
@@ -89,64 +89,85 @@ void handle_message(char *msg)
 	}
 }
 
-void handle_daemon_message(char *msg)
+void handle_daemon_message(uint8_t *msg)
 {
 	int i;
+	uint8_t *end = msg + msg[0];
+    msg++;
+    bool key_change = false;
 
-	if (msg[0] == KEYCODE_HID) {
-		msg++;
-		uint8_t ch = (uint8_t)msg[0];
-		bool pressed = (bool)msg[1];
-
-		// remap mods for jack's keyboard
-		// would be nice to have this configurable somehow
-		// maybe a mapping of keycodes sent to the host?
-
-        switch (ch) {
-        case KC_LCTL:
-            ch = KC_LGUI;
+	while (msg < end) {
+		switch (msg[0]) {
+        case MATRIX_EVENT:
+            msg += 1;
+        case LAYER_STATE:
+            msg += 1;
+        case ACTIVE_LAYER:
+        case USB_PASSTHROUGH:
+            msg += 2;
             break;
-        case KC_LGUI:
-            ch = KC_LCTL;
-            break;
-        default:
-            break;
-        }
+		case KEYCODE_HID:
+            key_change = true;
+			msg++;
+			uint8_t ch = msg[0];
+			bool pressed = (bool)msg[1];
+            msg += 2;
 
-        switch (ch) {
-        case 0xE0 ... 0xE7:
-            if (pressed)
-                mods |= (1 << (ch & 0x7));
-            else
-                mods &= ~(1 << (ch & 0x7));
-            break;
-        default:
-            keys_down[ch] = pressed;
-            break;
-        }
-
-
-		uint8_t key_list[256] = { 0 };
-		uint8_t key_count = 0;
-
-		for (i = 0; i < 256; i++) {
-			if (keys_down[i]) {
-				key_list[key_count++] = i;
+			// remap mods for jack's keyboard
+			// would be nice to have this configurable somehow
+			// maybe a mapping of keycodes sent to the host?
+			switch (ch) {
+			case KC_LCTL:
+				ch = KC_LGUI;
+				break;
+			case KC_LGUI:
+				ch = KC_LCTL;
+				break;
+			default:
+				break;
 			}
-		}
 
-		int x;
-		unsigned char buf[16];
-		buf[0] = 1; // report id
-		buf[1] = mods; // mods
-		buf[2] = 0; // padding
-		for (x = 3; (x < 16); x++) {
-			buf[x] = key_list[x - 3]; // keycodes
+			switch (ch) {
+			case 0xE0 ... 0xE7:
+				if (pressed)
+					mods |= (1 << (ch & 0x7));
+				else
+					mods &= ~(1 << (ch & 0x7));
+				break;
+			default:
+				keys_down[ch] = pressed;
+				break;
+			}
+			break;
+        default:
+            msg++;
+            break;
 		}
-        // don't print this out unles you're debugging - it'll be logged
-        // printf("%.16X\n", buf);
-		gadget_write(buf);
 	}
+
+    if (key_change) {
+    	uint8_t key_list[256] = { 0 };
+    	uint8_t key_count = 0;
+
+    	for (i = 0; i < 256; i++) {
+    		if (keys_down[i]) {
+    			key_list[key_count++] = i;
+    		}
+    	}
+
+    	int x;
+    	unsigned char buf[16];
+    	buf[0] = 1; // report id
+    	buf[1] = mods; // mods
+    	buf[2] = 0; // padding
+    	for (x = 3; (x < 16); x++) {
+    		buf[x] = key_list[x - 3]; // keycodes
+    	}
+    	// don't print this out unles you're debugging - it'll be logged
+    	// printf("%.16X\n", buf);
+    	// printf("Mod state: %.2X\n", mods);
+    	gadget_write(buf);
+    }
 }
 
 struct qmk_gadget_cfg cfg = {

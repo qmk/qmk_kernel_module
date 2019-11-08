@@ -6,6 +6,8 @@
 #include "qmk_socket.h"
 
 static struct sock *nl_sk = NULL;
+static uint8_t socket_message[256];
+static uint8_t socket_message_size = 1;
 
 void nl_input(struct sk_buff *skb)
 {
@@ -37,31 +39,46 @@ int nl_bind(struct net *net, int group) {
     return 0;
 }
 
-void send_socket_message(uint8_t * msg, uint8_t msg_size)
+void send_socket_message(void)
 {
     struct sk_buff *skb;
     struct nlmsghdr *nlh;
-    // int msg_size = strlen(msg) + 1;
-
     int res;
 
-    skb = nlmsg_new(NLMSG_ALIGN(msg_size + 1), GFP_KERNEL);
+    socket_message[0] = socket_message_size;
+
+    skb = nlmsg_new(NLMSG_ALIGN(socket_message_size + 1), GFP_KERNEL);
     if (!skb) {
         pr_err("Allocation failure.\n");
         return;
     }
 
-    nlh = nlmsg_put(skb, 0, 1, NLMSG_DONE, msg_size + 1, 0);
+    nlh = nlmsg_put(skb, 0, 1, NLMSG_DONE, socket_message_size + 1, 0);
     // strcpy(nlmsg_data(nlh), msg);
-    memcpy(nlmsg_data(nlh), msg, msg_size);
+    memcpy(nlmsg_data(nlh), socket_message, socket_message_size);
 
     res = nlmsg_multicast(nl_sk, skb, 0, MYMGRP, GFP_KERNEL);
     if (res < 0 && res != -3)
         pr_info("nlmsg_multicast() error: %d\n", res);
 
+    socket_message_size = 1;
+
 }
 
-int send_socket_message_f(const char *fmt, ...)
+void queue_socket_message(uint8_t * msg, uint8_t msg_size)
+{
+    int i;
+
+    if ((socket_message_size + msg_size) < 256) {
+        for (i = 0; i < msg_size; i++) {
+            socket_message[socket_message_size+ i] = msg[i];
+        }
+        socket_message_size += msg_size;
+    }
+
+}
+
+int queue_socket_message_f(const char *fmt, ...)
 {
     va_list args;
     int i;
@@ -69,7 +86,7 @@ int send_socket_message_f(const char *fmt, ...)
 
     va_start(args, fmt);
     i=vsprintf(buf,fmt,args);
-    send_socket_message(buf, strlen(buf) + 1);
+    queue_socket_message(buf, strlen(buf) + 1);
     va_end(args);
     return i;
 }

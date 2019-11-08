@@ -10,3 +10,5 @@ qmk_keycode_t keycode_from_keymap(struct qmk_keyboard *keyboard, uint8_t layer,
 					 << get_count_order(keyboard->cols))) +
 				(row << get_count_order(keyboard->cols)) + col];
 }
+
+// bool key_state

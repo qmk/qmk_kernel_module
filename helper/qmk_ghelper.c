@@ -133,54 +133,68 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr,
 void handle_message(uint8_t *msg)
 {
 	int i;
+	bool pressed;
+	uint8_t row, col, ch;
+	uint8_t *end = msg + msg[0];
+	msg++;
+	bool key_change = false;
 
-	if (msg[0] == HANDSHAKE) {
-		msg++;
-		printf("\033[0;33m%s\033[0m\n", msg);
-	} else if (msg[0] == MSG_GENERIC) {
-		msg++;
-		printf("\033[0;33m%s\033[0m\n", msg);
-	} else if (msg[0] == KEYCODE_HID) {
-		msg++;
-		uint8_t ch = msg[0];
-		bool pressed = (bool)msg[1];
+	while (msg < end) {
+		switch (msg[0]) {
+		case MATRIX_EVENT:
+			row = msg[1];
+			col = msg[2];
+			bool pressed = (bool)msg[3];
 
-		if (pressed) {
-			printf("\033[1;32mHID keycode pressed:  (0x%.2X) %s\033[0m\n",
-			       ch, keycode_to_string[ch]);
-		} else {
-			printf("\033[0;32mHID keycode released: (0x%.2X) %s\033[0m\n",
-			       ch, keycode_to_string[ch]);
+			if (pressed) {
+				printf("\033[1;34mMatrix event down:    (%d, %d)\033[0m\n",
+				       row, col);
+			} else {
+				printf("\033[0;34mMatrix event up:      (%d, %d)\033[0m\n",
+				       row, col);
+			}
+
+			planck_keys[row][col].pressed = pressed;
+
+			needs_update = true;
+			msg += 4;
+			break;
+		case LAYER_STATE:
+			layer_state = ((uint16_t)msg[1] << 8) | (msg[2]);
+			msg += 3;
+			break;
+		case KEYCODE_HID:
+			ch = msg[1];
+			pressed = (bool)msg[2];
+
+			if (pressed) {
+				printf("\033[1;32mHID keycode pressed:  (0x%.2X) %s\033[0m\n",
+				       ch, keycode_to_string[ch]);
+			} else {
+				printf("\033[0;32mHID keycode released: (0x%.2X) %s\033[0m\n",
+				       ch, keycode_to_string[ch]);
+			}
+			msg += 3;
+			break;
+		case ACTIVE_LAYER:
+			active_layer = msg[1];
+			printf("\033[0;33mLayer state:              0x%.2X\033[0m\n",
+			       active_layer);
+			needs_update = true;
+			msg += 2;
+			break;
+		case USB_PASSTHROUGH:
+			usb_passthrough = (bool)msg[1];
+			msg += 2;
+			break;
+		case MSG_GENERIC:
+			printf("\033[0;33m%s\033[0m\n", msg + 1);
+			msg += msg[0];
+			break;
+		default:
+			msg++;
+			break;
 		}
-	} else if (msg[0] == MATRIX_EVENT) {
-		msg++;
-		uint8_t row = msg[0];
-		uint8_t col = msg[1];
-		bool pressed = (bool)msg[2];
-
-		if (pressed) {
-			printf("\033[1;34mMatrix event down:    (%d, %d)\033[0m\n",
-			       row, col);
-		} else {
-			printf("\033[0;34mMatrix event up:      (%d, %d)\033[0m\n",
-			       row, col);
-		}
-
-		planck_keys[row][col].pressed = pressed;
-
-		needs_update = true;
-	} else if (msg[0] == ACTIVE_LAYER) {
-		msg++;
-		active_layer = msg[0];
-		printf("\033[0;33mLayer state:              0x%.2X\033[0m\n",
-		       active_layer);
-		needs_update = true;
-	} else if (msg[0] == LAYER_STATE) {
-		msg++;
-		layer_state = ((uint16_t)msg[0] << 8) | (msg[1]);
-	} else if (msg[0] == USB_PASSTHROUGH) {
-		msg++;
-		usb_passthrough = (bool)msg[0];
 	}
 }
 
@@ -192,8 +206,8 @@ static gboolean on_timer_event(GtkWidget *widget)
 	g_source_remove(global_timeout_ref);
 
 	// scan for 4 messages at a time
-	for (i = 0; i < 4; i++)
-		read_message(nls, handle_message);
+	// for (i = 0; i < 4; i++)
+	read_message(nls, handle_message);
 
 	if (change || needs_update) {
 		needs_update = false;
@@ -478,7 +492,7 @@ int main(int argc, char *argv[])
 
 	// init
 
-	nls = open_netlink();
+	nls = open_unblocked_netlink();
 	send_message(nls, "hi!");
 
 	gtk_widget_show_all(window);
