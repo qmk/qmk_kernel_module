@@ -78,3 +78,26 @@ The installation was based on [this guide](http://blog.gegg.us/2017/08/a-matrix-
     libcomposite
     input-polldev
     qmk
+
+## QMK Helper
+
+This passes keycodes onto a computer for the Pi Zero & Zero W and displays other useful info. libusbgx is required for the passthrough. It requires there packages to build:
+
+    sudo apt install autoconf libtool libconfig-dev
+
+You can build it like this:
+
+    cd lib/libusbgx
+    autoreconf -i
+    ./configure --prefix=build
+    make
+    make install 
+
+Once that is done, `make -C helper` from the root folder. `qmk_helper` is the console program, and takes these arguments:
+
+    -o open gadget
+    -c close gadget
+    -t test
+    -d daemon mode, open and pass through keycodes
+
+`qmk_ghelper` is the gui version - `make -C helper qmk_ghelper` to build. Both need sudo privegdes to run.
