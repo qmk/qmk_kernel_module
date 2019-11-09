@@ -106,7 +106,7 @@
                     LAYER_MATRIX_KEY(0, 7, 4, KC_LCTL)
                     LAYER_MATRIX_KEY(0, 6, 4, KC_LALT)
                     LAYER_MATRIX_KEY(0, 5, 4, KC_LGUI)
-                    LAYER_MATRIX_KEY(0, 4, 4, KC_SPACE)
+                    LAYER_MATRIX_KEY(0, 1, 4, KC_SPACE)
                     LAYER_MATRIX_KEY(0, 2, 9, KC_RGUI)
                     LAYER_MATRIX_KEY(0, 3, 9, KC_RCTL)
                     LAYER_MATRIX_KEY(0, 4, 9, MO(1))
