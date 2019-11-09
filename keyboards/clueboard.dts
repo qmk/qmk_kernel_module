@@ -19,7 +19,7 @@
 
                 keypad,num-layers = <2>;
                 keypad,num-rows = <8>;
-                keypad,num-columns = <9>;
+                keypad,num-columns = <10>;
                 row-gpios = <&gpio  9 0
                              &gpio  8 0
                              &gpio 24 0
@@ -36,7 +36,8 @@
                              &gpio  6 0
                              &gpio 12 0
                              &gpio  5 0
-                             &gpio  7 0>;
+                             &gpio  7 0
+                             &gpio 25 0>;
                 qmk,keymap = <
                     // layer 0
 
