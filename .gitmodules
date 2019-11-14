@@ -1,0 +1,3 @@
+[submodule "lib/libqmk"]
+	path = lib/libqmk
+	url = https://github.com/qmk/libqmk
