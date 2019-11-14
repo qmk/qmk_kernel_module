@@ -1,0 +1,2 @@
+[alias]
+    libqmk = submodule foreach git

@@ -33,7 +33,7 @@ ifneq ($(KERNELRELEASE),)
 
 obj-m  := $(TARGET).o
 qmk-src := $(patsubst $(PWD)/%,%,$(shell find $(PWD)/module/ -type f -name '*.c'))
-qmk-objs := $(patsubst $(PWD)/%.c,%.o,$(shell find $(PWD)/module/ -type f -name '*.c')) lib/libqmk.a
+qmk-objs := $(patsubst $(PWD)/%.c,%.o,$(shell find $(PWD)/module/ -type f -name '*.c')) lib/libqmk/libqmk.a
 
 EXTRA_CFLAGS = -I$(PWD)/include -I$(PWD)/lib/libqmk/include
 EXTRA_CFLAGS += -L lib -lqmk
@@ -41,6 +41,7 @@ EXTRA_CFLAGS += -L lib -lqmk
 else
 
 PWD = $(shell pwd)
+QMK_LIB = $(PWD)/lib/libqmk
 
 include $(KDIR)/tools/scripts/Makefile.include
 
@@ -59,7 +60,7 @@ helper-install:
 
 # QMK library building
 
-$(PWD)/lib/libqmk.a:
+$(QMK_LIB)/libqmk.a:
 	$(call descend,lib/libqmk)
 
 libqmk-clean:
@@ -67,7 +68,7 @@ libqmk-clean:
 
 # Kernel module building
 
-qmk-default: $(PWD)/lib/libqmk.a
+qmk-default: $(QMK_LIB)/libqmk.a
 	$(call descend,$(KDIR),M=$(PWD) modules)
 
 qmk-clean: libqmk-clean

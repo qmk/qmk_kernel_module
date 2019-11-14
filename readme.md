@@ -101,3 +101,7 @@ Once that is done, `make -C helper` from the root folder. `qmk_helper` is the co
     -d daemon mode, open and pass through keycodes
 
 `qmk_ghelper` is the gui version - `make -C helper qmk_ghelper` to build. Both need sudo privegdes to run.
+
+### Git helper
+
+You can run `git config --local include.path ../.gitconfig` in the main repo to have a `libqmk` alias for submodules. Run this from the `lib/libqmk` directory to be able to push easier with `git libqmk push`: `git config url."ssh://git@".insteadOf https://`
